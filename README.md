@@ -18,7 +18,12 @@ mayúsculas serif espaciadas (Cinzel), como «PARIS» (`site.tagline`, ahora vac
      y con la música los audífonos tiemblan apenas con los graves
      ([src/scripts/earphones.js](src/scripts/earphones.js)). Al caer, los audífonos quedan fuera de
      la pantalla para que se lean las canciones.
-  4. «Entrar» desvanece la música y levanta la intro.
+  4. **La entrada (momento firma):** se desliza la barra de iOS 4 «desliza para entrar» (o se
+     presiona, o `Esc`; en un teléfono, basta girarlo de lado). El iPhone gira a horizontal y, a medio
+     giro, la app de Música cede su lugar a un Cover Flow, como pasaba en el iPhone 4. Luego su
+     pantalla crece hasta llenar la ventana y se vuelve la portada, que se asienta. La canción sigue
+     sonando y queda arriba a la izquierda, con pausa (`NowPlaying.astro`, `scripts/player.ts`). Con
+     movimiento reducido es un fundido.
 
   Las texturas se generan con dos scripts:
   - `python tools/photo_assets.py tools/referencia-iphone.webp public/fotos` hace el teléfono a partir
@@ -49,11 +54,12 @@ compilado a tu cuenta: `npx netlify-cli login` y luego `npx netlify-cli deploy -
 
 | Ruta        | Qué es                                                                                  |
 |-------------|-----------------------------------------------------------------------------------------|
-| `/`         | Un Cover Flow blanco, como el del iPod: fotos sobre todo, y también canciones y noticias (`site.coverflow`). La portada del medio mira de frente, las demás giran hacia ella, todas se reflejan en el suelo, y abajo van sus dos líneas en la Helvetica negrita del iPod. Se pasa con scroll, rueda, arrastrando, flechas o tocando una portada; la del medio abre su enlace. |
-| `/musica`   | Cada canción como una página de revista: foto grande, crédito vertical en serif, folio. |
-| `/fechas`   | Cartel estilo nicebassbro: imagen a sangre (`site.tour.image`), título con brillo y cada fecha en una banda oscura. |
-| `/tienda`   | Productos que enlazan a la tienda externa.                                              |
-| `/contacto` | Correos y formulario; la dirección del estudio con el estilo de la marca.               |
+| `/`         | Un Cover Flow blanco, como el del iPod: fotos sobre todo, y también canciones y noticias (`site.coverflow`). La portada del medio mira de frente, las demás giran hacia ella, todas se reflejan en el suelo, y abajo van sus dos líneas en la Helvetica negrita del iPod. Se pasa con scroll, rueda, arrastrando, flechas o tocando una portada. La del medio se voltea como en iTunes: atrás, una canción se escucha y enlaza a Apple Music, Spotify y YouTube; una noticia se cuenta; una foto da su crédito. Desde el reverso de una canción, «Ver en Música» lleva su portada volando a su página. |
+| `/musica`   | Cada canción como una página de revista: foto grande, crédito vertical en serif, folio. Se hojea: al bajar, cada página gira sobre su borde izquierdo. |
+| `/fechas`   | Cartel estilo nicebassbro: imagen a sangre (`site.tour.image`), título que se enciende como letrero y cada fecha en una banda oscura, una tras otra. |
+| `/tienda`   | Productos que enlazan a la tienda externa; giran hacia ti al aparecer, como en el Cover Flow. |
+| `/contacto` | Un mensaje de iOS 4: Yeyo escribe «amor, cómo ESTÁS???», eliges a quién (management, booking o prensa) y contestas; al enviar, tu burbuja verde, la barra azul y «Entregado». Abajo, los correos directos y la dirección del estudio. |
+| `/404`      | Una alerta de iOS 4: «No se puede reproducir». |
 | `/juego`    | La bola sobre el artículo de Wikipedia de Yeyo («Yeyo (músico)», es.wikipedia). Solo arranca al pulsar «Jugar». |
 
 El menú lleva a **música · fechas · tienda · contacto**, y una bolita de cristal lleva al juego. Abajo, en todas las páginas,
@@ -65,14 +71,26 @@ el CDN de Apple (mzstatic.com). Spotify y YouTube son búsquedas; pon los enlace
 `site.songs` cuando los tengas. Para ver otra vez la intro, borra `yeyo-intro` del sessionStorage o
 abre una pestaña nueva.
 
+## Movimiento
+
+Todo gira y se asienta, como en el iPhone: tres duraciones (`--dur-micro`, `--dur-media`,
+`--dur-larga`) y tres curvas (`--ease-entrada`, `--ease-salida`, `--ease-enfasis`) en
+[global.css](src/styles/global.css). Las animaciones ligadas al scroll (Cover Flow, Música, Tienda) van
+dentro de `@supports (animation-timeline: view())` y con `animation-timeline` en una regla aparte:
+si van en la misma, el minificador las mete en el atajo `animation` y los navegadores la descartan.
+Con movimiento reducido no hay giros ni acercamientos.
+
 ## Qué editar
 
 - **Todo el contenido:** [src/data/site.ts](src/data/site.ts) (canciones, fechas, productos, redes, correos).
 - **Cover Flow:** en `site.coverflow`, cada portada con `kind` (`foto`, `cancion` o `noticia`), `image`,
   `title`, `subtitle` y, si lleva a algún sitio, `href`. La que tenga `start: true` sale de frente al abrir.
 - **Imágenes:** se sustituyen los `.svg` de `public/fotos/` y se actualizan las rutas y medidas en `site.ts`.
-- **Formulario de contacto:** sin servicio configurado abre el correo del visitante; para recibirlo
-  de verdad, pon la URL de Formspree o similar en `site.form.action`.
+- **Formulario de contacto:** sin servicio configurado abre el correo del visitante, dirigido a quien
+  eligió; para recibirlo de verdad, pon la URL de Formspree o similar en `site.form.action`.
+- **Dominio:** al compilar, `SITE_URL=https://dominio` hace absolutos los enlaces de la vista previa
+  (WhatsApp, Instagram), el canónico y el sitemap. La imagen para compartir es `public/og/yeyo.jpg`
+  (`python tools/og_image.py public/og/yeyo.jpg`).
 - **Fechas:** se filtran al compilar; vuelve a compilar cuando pase una.
 - **Tipografía:** Helvetica Neue donde existe (Mac, iPhone) e Inter Tight, incluida en el proyecto, en
   el resto (Windows, Android). Está en [src/styles/global.css](src/styles/global.css).
@@ -83,9 +101,10 @@ Es [liquid-glass-react](https://github.com/rdev/liquid-glass-react), en
 [src/components/Glass.tsx](src/components/Glass.tsx): los logos de redes (`SocialGlass`) y la bolita
 del menú y del botón «Jugar» (`GlassOrb`). Como en blanco hay poco que refractar, el cristal lleva
 además su propia luz (`.sheen` en global.css): el borde brillante arriba, el brillo que cae y el borde
-de abajo más oscuro, como el cristal de iOS sobre blanco. Se dibuja en el navegador (islas de React con
-`client:only`); sin JavaScript se ven los logos y la bolita normales. La refracción solo la pintan
-Chrome y Edge; Safari y Firefox muestran el cristal esmerilado. La librería usa unas clases de
+de abajo más oscuro, como el cristal de iOS sobre blanco. La página los dibuja primero en CSS, con el
+mismo tamaño y luz; React y la librería (unos 270 KB) se cargan solo en Chrome, Edge y Opera, que son
+los que pintan la refracción, y cuando la página ya está en reposo ([src/scripts/glass.ts](src/scripts/glass.ts)).
+En Safari y Firefox se queda el cristal en CSS, sin descargar nada. La librería usa unas clases de
 Tailwind, definidas a mano al final de [global.css](src/styles/global.css), y ahí también se ajusta
 para fondo blanco: la sombra va por encima del cristal porque si no, el cristal la refracta y se ve
 gris. La bola del juego, que el juego redibuja cada fotograma, mantiene su propio cristal
