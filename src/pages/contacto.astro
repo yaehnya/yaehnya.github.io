@@ -1,0 +1,55 @@
+---
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+---
+
+<Base title="Contacto" page="contacto">
+  <main class="page contact">
+    <h1 class="wordmark"><span class="wm">Contacto</span><small>{site.name}</small></h1>
+
+    <dl class="people">
+      {site.contact.map(c => (
+        <div><dt class="label">{c.label}</dt><dd><a href={`mailto:${c.email}`}>{c.email}</a></dd></div>
+      ))}
+    </dl>
+
+    <form class="form" method="post" action={site.form.action || undefined}
+      data-mailto={site.form.action ? undefined : site.form.fallbackEmail}>
+      <label><span class="label">Nombre</span><input name="nombre" autocomplete="name" required /></label>
+      <label><span class="label">Correo</span><input name="correo" type="email" autocomplete="email" required /></label>
+      <label><span class="label">Asunto</span><input name="subject" /></label>
+      <label><span class="label">Mensaje</span><textarea name="mensaje" rows="6" required></textarea></label>
+      <button class="send label" type="submit">Enviar →</button>
+    </form>
+
+    <address class="wordmark studio"><span class="wm">{site.studio.line}</span><small>{site.studio.city}</small></address>
+  </main>
+</Base>
+
+<style>
+  .contact { display: grid; justify-items: center; align-content: start; }
+  .people { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 24px; width: min(620px, 100%); margin: 0; text-align: center; }
+  .people dt { color: var(--muted); margin-bottom: 6px; }
+  .people dd { margin: 0; font-size: 14px; }
+  .people a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  .form { display: grid; gap: 28px; width: min(620px, 100%); margin-top: 80px; }
+  .form label { display: grid; gap: 10px; }
+  .form .label { color: var(--muted); }
+  .form input, .form textarea {
+    width: 100%; padding: 8px 0; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+    background: transparent; color: var(--ink); font: 14px/1.5 var(--sans); resize: vertical;
+  }
+  .form input:focus, .form textarea:focus { outline: none; border-bottom-color: var(--ink); }
+  .send {
+    justify-self: center; margin-top: 8px; padding: 13px 30px; border: 0; border-radius: 3px;
+    background: var(--ink); color: var(--bg); cursor: pointer; transition: opacity .15s;
+  }
+  .send:hover { opacity: .75; }
+
+  .studio { margin-top: 110px; font-size: clamp(26px, 3vw, 40px); }
+</style>
+
+<script>
+  import '../scripts/mailto-forms';
+</script>

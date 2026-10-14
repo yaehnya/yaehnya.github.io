@@ -1,0 +1,38 @@
+---
+import '../styles/global.css';
+import Menu from '../components/Menu.astro';
+import Social from '../components/Social.astro';
+import Bolaweb from '../components/Bolaweb.astro';
+import { site, type Page } from '../data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  page: Page;
+  game?: boolean;        // load the ball game on this page (it starts only from a [data-bolaweb] button)
+  bar?: 'dark' | 'light';  // the top bar's text colour; light on pages that open on a dark picture
+}
+
+const { title, description = site.description, page, game = false, bar = 'dark' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title ? `${title} — ${site.name}` : site.name}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <slot name="head" />
+  </head>
+  <body>
+    <!-- #world is what the ball rolls over; the game's own UI stays outside it. -->
+    <div id="world">
+      <Menu page={page} tone={bar} />
+      <slot />
+    </div>
+    <Social tone={bar} />
+    {game && <Bolaweb />}
+  </body>
+</html>

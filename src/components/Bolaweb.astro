@@ -1,0 +1,86 @@
+---
+// The ball game's overlay. Only pages that ask for it (Base's `game` prop) include it, and it starts
+// only when an element with [data-bolaweb] is pressed; the page under #world is the level.
+---
+
+<div id="bw" hidden>
+  <canvas data-bw-back></canvas>
+  <div class="bw-glass" data-bw-glass></div>
+  <canvas data-bw-canvas></canvas>
+  <div class="bw-goal" aria-hidden="true"><i data-bw-goal></i></div>
+  <div class="bw-toast" data-bw-toast aria-hidden="true"></div>
+  <div class="bw-bar">
+    <button class="bw-btn" type="button" data-bw-exit>✕ Salir</button>
+    <button class="bw-btn" type="button" data-bw-mute>Sonido sí</button>
+    <span class="bw-stats">Ø <b data-bw-size>0</b> · <b data-bw-items>0</b> piezas · <b data-bw-pct>0%</b></span>
+  </div>
+  <div class="bw-done" data-bw-done hidden>
+    <div>
+      <p class="wordmark bw-meta"><span class="wm">Meta</span></p>
+      <p class="label" data-bw-time></p>
+      <div class="bw-actions">
+        <button class="bw-btn" type="button" data-bw-more>Seguir</button>
+        <button class="bw-btn" type="button" data-bw-again>Otra vez</button>
+        <button class="bw-btn" type="button" data-bw-exit>Salir</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  html.bw-on { overflow: hidden; touch-action: none; }
+  html.bw-on .social { display: none; }
+  /* Freeze the page while it is a level: positions were measured once, so nothing may drift. */
+  html.bw-on #world *, html.bw-on #world *::before, html.bw-on #world *::after {
+    animation-play-state: paused !important; transition: none !important;
+  }
+</style>
+
+<style>
+  /* Colours come from the page's theme (--bg, --ink), so the overlay suits dark and light pages. */
+  #bw {
+    position: fixed; inset: 0; z-index: 100; pointer-events: none; color: var(--ink);
+    font: 400 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase;
+  }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* The glass sphere. Chromium adds the refraction from liquid-glass.js; this frosted look is the fallback. */
+  .bw-glass {
+    position: absolute; left: 0; top: 0; width: 0; height: 0; border-radius: 50%; will-change: transform;
+    background: rgba(255, 255, 255, .05);
+    -webkit-backdrop-filter: blur(2px) saturate(1.6) brightness(1.05); backdrop-filter: blur(2px) saturate(1.6) brightness(1.05);
+  }
+  .bw-goal { position: absolute; top: 18px; left: 50%; translate: -50% 0; width: min(240px, 50vw); height: 2px; background: color-mix(in srgb, var(--ink) 18%, transparent); }
+  .bw-goal i { display: block; width: 0; height: 100%; background: var(--ink); transition: width .25s; }
+  .bw-toast {
+    position: absolute; top: 32px; left: 50%; translate: -50% -4px; max-width: 70vw; padding: 7px 10px;
+    background: var(--ink); color: var(--bg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    opacity: 0; transition: opacity .15s, translate .15s;
+  }
+  .bw-toast:global(.on) { opacity: 1; translate: -50% 0; }
+  .bw-bar { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; gap: 6px; align-items: center; }
+  .bw-btn {
+    pointer-events: auto; padding: 10px 12px; border: 0; background: var(--ink); color: var(--bg);
+    font: inherit; letter-spacing: inherit; text-transform: inherit; cursor: pointer; transition: opacity .15s;
+  }
+  .bw-btn:hover { opacity: .7; }
+  .bw-stats { margin-left: auto; padding: 10px 12px; background: color-mix(in srgb, var(--bg) 88%, transparent); white-space: nowrap; }
+  .bw-stats b { font-weight: 700; }
+  .bw-done {
+    position: absolute; inset: 0; display: grid; place-items: center; text-align: center; pointer-events: auto;
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+  }
+  .bw-meta { margin: 0 0 16px; font-size: clamp(64px, 10vw, 150px); }
+  .bw-actions { display: flex; gap: 6px; justify-content: center; margin-top: 32px; }
+</style>
+
+<script>
+  import { setup } from '../scripts/bolaweb/index.js';
+
+  const root = document.getElementById('bw')!;
+  const pick = <T extends Element = HTMLElement>(name: string) => root.querySelector<T>(`[data-bw-${name}]`)!;
+  const bolaweb = setup({
+    root, back: pick<HTMLCanvasElement>('back'), glass: pick('glass'), canvas: pick<HTMLCanvasElement>('canvas'), toast: pick('toast'), size: pick('size'), items: pick('items'),
+    pct: pick('pct'), goal: pick('goal'), done: pick('done'), time: pick('time'), mute: pick('mute'),
+  });
+  if (import.meta.env.DEV) Object.assign(window, { bolaweb });   // handy from the console while developing
+</script>

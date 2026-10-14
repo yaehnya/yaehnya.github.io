@@ -1,0 +1,63 @@
+---
+// The game's page: Yeyo's Wikipedia article exactly as Wikipedia shows it, with one floating button.
+// It does not use the site's layout or styles, so Wikipedia's own stylesheets are the only ones on the
+// page; the game brings the few rules it needs. The ball starts only when the button is pressed.
+import '@fontsource-variable/inter-tight';
+import Bolaweb from '../components/Bolaweb.astro';
+import GlassBall from '../components/GlassBall.astro';
+import { site } from '../data/site';
+import { fetchPage } from '../data/wikipedia';
+
+const { lang, title } = site.wikipedia;
+const page = await fetchPage(lang, title);
+const articleUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`;
+---
+
+<!doctype html>
+<html lang={lang} dir="ltr" class={page?.htmlClass}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{page?.title ?? `${title} — Wikipedia`}</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    {page?.styles.map(href => <link rel="stylesheet" href={href} />)}
+  </head>
+  <body class={page?.bodyClass}>
+    <!-- #world is what the ball rolls over: the whole Wikipedia page. -->
+    {page
+      ? <div id="world" set:html={page.body} />
+      : <div id="world"><p class="missing">No se pudo cargar la página. <a href={articleUrl}>Ábrela en Wikipedia</a>.</p></div>}
+
+    <button class="play" type="button" data-bolaweb>
+      <GlassBall size={38} id="play-ball" /><span>Jugar</span>
+    </button>
+
+    <Bolaweb />
+  </body>
+</html>
+
+<style is:global>
+  /* What the game's overlay expects from the site's stylesheet, scoped to it so Wikipedia is untouched. */
+  #bw {
+    --bg: #fff; --ink: #0b0b0b; --ctl: rgba(92, 92, 92, .88); --stretch: 1.14 .84;
+    --sans: 'Helvetica Neue', 'Inter Tight Variable', Helvetica, Arial, sans-serif;
+    --bounce: linear(0, .08 4%, .32 12%, .62 22%, .88 33%, 1.03 43%, 1.055 49%, 1.04 56%, 1.005 66%, .99 74%, .998 86%, 1);
+  }
+  #bw[hidden], #bw [hidden] { display: none !important; }
+  #bw .wordmark { margin: 0; font: 700 1em/.84 var(--sans); letter-spacing: -.045em; text-transform: uppercase; }
+  #bw .wordmark .wm { display: inline-block; scale: var(--stretch); }
+  #bw .label { font: 400 11px/1.4 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+  html.bw-on .play { display: none; }
+  #world { background: #fff; }
+</style>
+
+<style>
+  .play {
+    position: fixed; right: 22px; bottom: 22px; z-index: 90; display: inline-flex; align-items: center; gap: 10px;
+    padding: 7px 20px 7px 8px; border: 0; border-radius: 999px; background: #0b0b0b; color: #fff; cursor: pointer;
+    font: 700 13px/1 'Helvetica Neue', 'Inter Tight Variable', Helvetica, Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25); transition: scale .35s linear(0, .08 4%, .32 12%, .62 22%, .88 33%, 1.03 43%, 1.055 49%, 1.04 56%, 1.005 66%, .99 74%, .998 86%, 1);
+  }
+  .play:hover { scale: 1.06; }
+  .missing { padding: 40px; font: 16px/1.5 sans-serif; }
+</style>

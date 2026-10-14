@@ -1,0 +1,84 @@
+---
+// The songs as a magazine: first a cover, Saint Laurent campaign style, then each song as a page
+// (a big photo, the credit set vertically at its foot, a folio with the listen links).
+import Base from '../layouts/Base.astro';
+import { site } from '../data/site';
+
+const { musicCover: cover } = site;
+const two = (n: number) => String(n).padStart(2, '0');
+const total = two(site.songs.length);
+const dot = (iso: string) => iso.split('-').reverse().join('.');   // 2026-07-29 → 29.07.2026
+---
+
+<Base title="Música" page="musica">
+  <main class="songs">
+    <section class="cover" aria-label="Portada" style={`--ink: ${cover.ink}`}>
+      <img src={cover.src} alt={cover.alt} width={cover.width} height={cover.height} fetchpriority="high" />
+      <h1 class="wordmark cover-mark"><span class="wm">{site.name}</span>{site.tagline && <small>{site.tagline}</small>}</h1>
+      <ul class="headlines">
+        {site.songs.map((s, i) => <li><a href={`#cancion-${i + 1}`}><span class="stretch">{s.title}</span></a></li>)}
+      </ul>
+      <p class="issue label">Música — N° {total}</p>
+    </section>
+
+    {site.songs.map((s, i) => (
+      <article class="song" id={`cancion-${i + 1}`} aria-label={s.title}>
+        <figure>
+          <figcaption>{s.caption}</figcaption>
+          <img src={s.image} alt={`Portada de ${s.title}`} width={s.width} height={s.height} loading="lazy" />
+        </figure>
+        <footer class="folio label">
+          <span>{two(i + 1)} / {total}{s.date && ` — ${dot(s.date)}`}</span>
+          <span class="listen">
+            {s.apple && <a href={s.apple} target="_blank" rel="noopener">Apple Music ↗</a>}
+            {s.spotify && <a href={s.spotify} target="_blank" rel="noopener">Spotify ↗</a>}
+            {s.youtube && <a href={s.youtube} target="_blank" rel="noopener">YouTube ↗</a>}
+          </span>
+        </footer>
+      </article>
+    ))}
+  </main>
+</Base>
+
+<style>
+  html:has(.songs) { scroll-snap-type: y proximity; }
+
+  /* Cover: full-bleed photo, the logo huge across the top, cover lines bottom left, issue bottom right. */
+  .cover { position: relative; height: 100svh; min-height: 520px; overflow: hidden; color: var(--ink); scroll-snap-align: start; background: var(--panel); }
+  .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
+  .cover-mark { position: absolute; top: 64px; left: 0; right: 0; font-size: clamp(96px, 22vw, 400px); }
+  .headlines { position: absolute; left: 24px; bottom: 96px; display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+  .headlines .stretch { transform-origin: left center; }
+  .headlines a { font: 700 clamp(20px, 2.6vw, 34px)/1.05 var(--sans); letter-spacing: -.03em; }   /* titles as the artist writes them */
+  .headlines a:hover { text-decoration: underline; text-underline-offset: 4px; }
+  .issue { position: absolute; right: 24px; bottom: 96px; margin: 0; font-weight: 600; }
+
+  .song {
+    display: grid; grid-template-rows: 1fr auto; min-height: 100svh; padding: 64px 24px 96px;
+    scroll-snap-align: start;
+  }
+  figure { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: end; min-height: 0; margin: 0; }
+  /* The covers keep their colour: they are the artist's artwork. */
+  figure img {
+    grid-column: 2; justify-self: center; width: auto; max-height: calc(100svh - 180px); object-fit: contain;
+  }
+  /* Vertical, reading bottom to top, at the foot of the picture: "8Belial & YYY991: YSL". */
+  figcaption {
+    grid-column: 1; justify-self: start; writing-mode: vertical-rl; rotate: 180deg;
+    font: 15px/1 var(--serif); white-space: nowrap;
+  }
+  .folio { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 14px 48px 0; color: var(--muted); }
+  .listen { display: flex; gap: 18px; color: var(--ink); }
+  .listen a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  @media (max-width: 760px) {
+    .cover-mark { top: 72px; }
+    .headlines { bottom: 100px; right: 24px; }
+    .issue { bottom: auto; top: 22px; right: auto; left: 20px; }
+    .song { min-height: auto; padding: 64px 12px 40px 6px; }
+    .song:last-child { padding-bottom: 110px; }               /* clear of the social logos */
+    figure { grid-template-columns: 28px minmax(0, 1fr); }
+    figcaption { font-size: 13px; }
+    .folio { padding: 12px 0 0 28px; flex-direction: column; }
+  }
+</style>

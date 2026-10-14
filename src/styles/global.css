@@ -1,0 +1,106 @@
+@import '@fontsource-variable/inter-tight';
+@import '@fontsource-variable/cinzel';
+
+:root {
+  --bg: #ffffff;
+  --panel: #f0f0f0;              /* the references' light grey, behind photos */
+  --ink: #0b0b0b;
+  --muted: #8a8a8a;
+  --line: #e6e6e6;
+  --ctl: rgba(92, 92, 92, .88);
+  /* Helvetica Neue where it exists (Mac, iOS); Inter Tight, shipped with the site, everywhere else.
+     Plain "Helvetica" comes after: Windows maps it to Arial. */
+  --sans: 'Helvetica Neue', 'Inter Tight Variable', Helvetica, Arial, sans-serif;
+  --serif: 'Times New Roman', Times, serif;
+  --caps: 'Cinzel Variable', Copperplate, serif;   /* the wedge-serif capitals of "PARIS" under the logo */
+  --stretch: 1.14 .84;                             /* how bold grotesque is drawn: wider, lower */
+  /* A drop that overshoots a little and settles. */
+  --bounce: linear(0, .08 4%, .32 12%, .62 22%, .88 33%, 1.03 43%, 1.055 49%, 1.04 56%, 1.005 66%, .99 74%, .998 86%, 1);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { background: var(--bg); color: var(--ink); -webkit-text-size-adjust: 100%; }
+body { margin: 0; min-height: 100svh; font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
+
+#world { background: var(--bg); min-height: 100svh; }
+
+/* The wordmark, set like the Saint Laurent logo: bold grotesque capitals packed so tight they almost
+   touch, and under them a line of widely spaced wedge-serif capitals, like "PARIS". */
+.wordmark {
+  margin: 0; font: 700 clamp(44px, 6vw, 110px)/.84 var(--sans); letter-spacing: -.045em;
+  text-transform: uppercase; text-align: center; font-style: normal;
+}
+/* Bold grotesque is drawn stretched: wider and a little lower than the font. */
+.wordmark .wm, .stretch { display: inline-block; scale: var(--stretch); }
+.wordmark small {
+  display: block; margin-top: .45em; padding-left: .42em;  /* balances the space after the last letter */
+  font: 700 .22em/1 var(--caps); letter-spacing: .42em;
+}
+
+.label { font: 400 11px/1.4 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+
+/* Inner pages: room under the toolbar, a wordmark heading. */
+.page { min-height: 100svh; padding: 110px 24px 120px; }
+.page > .wordmark { margin-bottom: 72px; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+}
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }
+
+/* Liquid glass (src/components/Glass.tsx). liquid-glass-react styles a few of its layers with Tailwind
+   class names; these are the ones it uses. */
+.lg { position: relative; display: block; }
+.lg .relative { position: relative; }
+.lg .bg-black { background: #000; }
+.lg .opacity-0 { opacity: 0; }
+.lg .opacity-20 { opacity: .07; }   /* the tint it puts under glass on a light page; .2 greys the white page */
+.lg .opacity-100 { opacity: 1; }
+/* Its other tint blends in overlay with what is behind, but inside a fixed bar (its own stacking
+   context) there is nothing behind it to blend with and it turns solid black; leave it out. */
+.lg .mix-blend-overlay { display: none; }
+/* The glass blurs and bends what is painted under it, its own shadow included, so on a white page its
+   shadow turns it grey. The shadow goes on top instead, outside the glass only (an outer box-shadow of
+   a transparent ring). */
+.lg .glass { box-shadow: none !important; }
+.lg::after {
+  content: ''; position: absolute; inset: 0; border-radius: 999px; pointer-events: none;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .14), 0 1px 3px rgba(0, 0, 0, .12);
+}
+.lg .pointer-events-none { pointer-events: none; }
+.lg .cursor-pointer { cursor: pointer; }
+.lg .transition-all { transition: all .15s ease-in-out; }
+.lg .text-white { color: inherit; }
+.lg-face { display: grid; place-items: center; }
+
+/* The light on a glass marble (GlassOrb): a darker Fresnel edge, a caustic low on the far side and a
+   highlight up on the near side, over the library's glass. */
+.orb {
+  display: block; border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 26%, #fff 0, rgba(255, 255, 255, .9) 7%, transparent 20%),
+    radial-gradient(circle at 62% 78%, rgba(255, 255, 255, .85) 0, transparent 28%),
+    radial-gradient(circle at 50% 45%, transparent 38%, rgba(170, 180, 196, .45) 78%, rgba(110, 120, 138, .75) 100%);
+  box-shadow: inset 0 -3px 6px rgba(80, 90, 110, .25), inset 0 2px 3px rgba(255, 255, 255, .9);
+}
+
+/* The light on a drop of glass (the social logos, the caption's pill): on a white page there is little
+   behind it to bend, so the glass shows by its own light, as iOS's does on white: a bright rim along
+   the top, a sheen falling from it, the lower edge darkened by what it refracts, and a faint cool tint. */
+.sheen {
+  display: grid; place-items: center; width: 100%; height: 100%; border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .08) 34%, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, .2)),
+    rgba(226, 233, 243, .1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .55),
+    inset 0 0 0 1px rgba(255, 255, 255, .35), inset 0 0 0 .5px rgba(60, 70, 90, .14),
+    inset 2px 5px 9px -5px rgba(255, 255, 255, .95), inset -3px -7px 12px -6px rgba(40, 50, 70, .2);
+}

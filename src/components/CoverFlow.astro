@@ -1,0 +1,219 @@
+---
+// Cover Flow, as on the iPod, on white: a row of covers you scroll sideways, the one in the middle
+// facing you, the others turned toward it and stacked on either side, all of them reflected on the
+// floor. Under the middle one, its two lines in the iPod's bold Helvetica.
+//
+// The turning is a scroll-driven animation (each cover follows its own view timeline across the
+// scroller), after scroll-driven-animations.style/demos/cover-flow; browsers without them get the same
+// motion from a scroll listener. Scroll snapping keeps one cover in the middle. Click a cover at the
+// side to bring it to the middle; click the one in the middle to open it (songs, news).
+import { site } from '../data/site';
+const items = site.coverflow;
+const start = Math.max(0, items.findIndex(c => 'start' in c && c.start));
+---
+
+<section class="coverflow" aria-label="Fotos, música y noticias">
+  <div class="scroller" tabindex="0" data-start={start}>
+    <ul class="flow">
+      {items.map((c, i) => {
+        const near = Math.abs(i - start) < 4;
+        const Tag = c.href ? 'a' : 'span';
+        return (
+          <li data-title={c.title} data-subtitle={c.subtitle ?? ''}>
+            <Tag class="cover" href={c.href} data-kind={c.kind} draggable="false">
+              <img class="art" src={c.image} alt={c.alt} loading={near ? 'eager' : 'lazy'} draggable="false" />
+              <img class="reflection" src={c.image} alt="" aria-hidden="true" loading={near ? 'eager' : 'lazy'} draggable="false" />
+            </Tag>
+          </li>
+        );
+      })}
+    </ul>
+  </div>
+  <p class="caption" aria-live="polite">
+    <b>{items[start]?.title}</b>
+    <span>{items[start]?.subtitle}</span>
+  </p>
+</section>
+
+<style>
+  .coverflow {
+    --s: min(30vw, 42svh, 400px);                    /* a cover's side */
+    position: relative; display: grid; align-content: center; justify-items: center;
+    height: 100svh; min-height: 460px; padding: 56px 0 88px; overflow: hidden; background: var(--bg);   /* one screen, no page scroll */
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;  /* the iPod's, since 2007 */
+  }
+  @media (max-width: 760px) { .coverflow { --s: min(54vw, 38svh); } }
+
+  .scroller {
+    --step: calc(var(--s) * .22);                    /* how far apart the covers at the sides sit */
+    position: relative;                              /* the covers' offsetParent, for the script */
+    width: 100%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory; scrollbar-width: none; outline: none;
+    perspective: calc(var(--s) * 2.4); perspective-origin: 50% 45%;
+    cursor: grab;
+  }
+  .scroller::-webkit-scrollbar { display: none; }
+  .scroller.dragging { scroll-snap-type: none; cursor: grabbing; }
+  .scroller:focus-visible { outline: 1.5px solid var(--ink); outline-offset: -6px; }
+
+  .flow {
+    display: flex; margin: 0; padding: calc(var(--s) * .12) 0 calc(var(--s) * .62); list-style: none;
+    transform-style: preserve-3d;
+  }
+  .flow li {
+    position: relative; flex: 0 0 var(--step); height: var(--s);
+    scroll-snap-align: center; transform-style: preserve-3d;
+    view-timeline: --cover inline;
+  }
+  /* Room so the first and the last cover can reach the middle: real boxes, not margins, because the
+     end margin of the last cover does not count as something to scroll to, and on a wide screen
+     there would be nothing left to scroll. */
+  .flow::before, .flow::after { content: ''; flex: 0 0 calc(50% - var(--step) / 2); }
+
+  .cover {
+    position: absolute; left: 50%; top: 0; display: block; width: var(--s); height: var(--s); margin-left: calc(var(--s) / -2);
+    transform-style: preserve-3d; transform: translateX(calc(var(--s) * .44)) translateZ(calc(var(--s) * -.4)) rotateY(-70deg);
+    -webkit-tap-highlight-color: transparent; user-select: none;
+  }
+  .art, .reflection { position: absolute; left: 0; width: 100%; height: 100%; object-fit: cover; background: var(--panel); }
+  .art { top: 0; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .08); }
+  /* The floor: the cover upside down under itself, fading out, as on the iPod's white Cover Flow. */
+  .reflection {
+    top: calc(100% + 2px); scale: 1 -1; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, .42));
+    mask-image: linear-gradient(to bottom, transparent 50%, rgba(0, 0, 0, .42));
+  }
+
+  /* Each cover turns to face you as it passes the middle: from the step before to the step after it
+     (one cover's spacing either side), turned toward the middle and pushed back the rest of the way. */
+  @keyframes face {
+    0% { transform: translateX(calc(var(--s) * .44)) translateZ(calc(var(--s) * -.4)) rotateY(-70deg); }
+    50% { transform: translateX(0) translateZ(calc(var(--s) * .04)) rotateY(0deg); }
+    100% { transform: translateX(calc(var(--s) * -.44)) translateZ(calc(var(--s) * -.4)) rotateY(70deg); }
+  }
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .cover { animation: face linear both; }
+    /* The timeline in a rule of its own: in one rule, the CSS minifier folds it into the `animation`
+       shorthand, which browsers do not accept there, and the whole declaration is dropped. */
+    .flow li > .cover {
+      animation-timeline: --cover;
+      animation-range: cover calc(50% - var(--step)) cover calc(50% + var(--step));
+    }
+  }
+
+  .caption {
+    display: grid; justify-items: center; align-content: start; gap: .15em; min-height: 2.6em; margin: calc(var(--s) * -.52) 16px 0;
+    position: relative; z-index: 1; text-align: center; font-weight: 700; letter-spacing: -.01em;
+    font-size: clamp(15px, 1.25vw + 4px, 21px); line-height: 1.2; transition: opacity .2s;
+  }
+  .caption span { color: #4a4a4a; font-size: .86em; }
+  .caption.changing { opacity: 0; }
+</style>
+
+<script>
+  // Behaviour around the CSS: open on the starting cover, keep the caption in step, turn a mouse wheel
+  // into sideways scrolling, drag with the mouse, click to bring a cover to the middle, and (for
+  // browsers without scroll-driven animations) turn the covers from here.
+  for (const flow of document.querySelectorAll<HTMLElement>('.coverflow')) {
+    const scroller = flow.querySelector<HTMLElement>('.scroller')!;
+    const items = [...scroller.querySelectorAll<HTMLLIElement>('li')];
+    const caption = flow.querySelector<HTMLElement>('.caption')!;
+    const native = CSS.supports('(animation-timeline: view()) and (animation-range: entry)');
+
+    const centreOf = (el: HTMLElement) => el.offsetLeft + el.offsetWidth / 2;
+    const middle = () => scroller.scrollLeft + scroller.clientWidth / 2;
+    const current = () => {
+      let best = 0, bd = Infinity;
+      items.forEach((li, i) => { const d = Math.abs(centreOf(li) - middle()); if (d < bd) { bd = d; best = i; } });
+      return best;
+    };
+    const go = (i: number, smooth = true) => {
+      const li = items[Math.max(0, Math.min(items.length - 1, i))];
+      scroller.scrollTo({ left: centreOf(li) - scroller.clientWidth / 2, behavior: smooth ? 'smooth' : 'instant' });
+    };
+
+    // The caption: the middle cover's two lines, with a quick fade when it changes.
+    let shown = -1, swap = 0;
+    const label = () => {
+      const i = current();
+      if (i === shown) return;
+      shown = i;
+      caption.classList.add('changing');
+      clearTimeout(swap);
+      swap = window.setTimeout(() => {
+        caption.querySelector('b')!.textContent = items[i].dataset.title!;
+        caption.querySelector('span')!.textContent = items[i].dataset.subtitle!;
+        caption.classList.remove('changing');
+      }, 140);
+    };
+
+    // Without scroll-driven animations: the same turn, set from each cover's distance to the middle.
+    const turn = () => {
+      const s = items[0].querySelector<HTMLElement>('.cover')!.offsetWidth, step = items[0].offsetWidth, m = middle();
+      for (const li of items) {
+        const t = Math.max(-1, Math.min(1, (centreOf(li) - m) / step));       // +1: a step right, -1: a step left
+        const a = Math.abs(t), side = Math.sign(t);
+        li.querySelector<HTMLElement>('.cover')!.style.transform =
+          `translateX(${side * a * s * .44}px) translateZ(${(.04 - a * .44) * s}px) rotateY(${-side * a * 70}deg)`;
+      }
+    };
+
+    let frame = 0;
+    scroller.addEventListener('scroll', () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => { label(); if (!native) turn(); });
+    }, { passive: true });
+
+    // A vertical wheel moves one cover at a time.
+    let wheelLock = 0;
+    scroller.addEventListener('wheel', e => {
+      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;           // a trackpad swiping sideways already scrolls
+      e.preventDefault();
+      if (performance.now() < wheelLock) return;
+      wheelLock = performance.now() + 140;
+      go(current() + Math.sign(e.deltaY));
+    }, { passive: false });
+
+    // Dragging with the mouse, snapping again on release.
+    let drag: { x: number; left: number; moved: boolean } | null = null;
+    scroller.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      drag = { x: e.clientX, left: scroller.scrollLeft, moved: false };
+    });
+    addEventListener('pointermove', e => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      if (!drag.moved && Math.abs(dx) < 4) return;
+      drag.moved = true;
+      scroller.classList.add('dragging');
+      scroller.scrollLeft = drag.left - dx;
+    });
+    addEventListener('pointerup', () => {
+      if (!drag) return;
+      const moved = drag.moved;
+      drag = null;
+      if (moved) { scroller.classList.remove('dragging'); go(current()); scroller.dataset.dragged = '1'; }
+    });
+
+    // A click on a cover at the side brings it to the middle; on the middle one, it follows its link.
+    scroller.addEventListener('click', e => {
+      if (scroller.dataset.dragged) { delete scroller.dataset.dragged; e.preventDefault(); return; }
+      const li = (e.target as Element).closest('li');
+      if (!li) return;
+      const i = items.indexOf(li as HTMLLIElement);
+      if (i !== current()) { e.preventDefault(); go(i); }
+    });
+
+    // Arrow keys step through the covers.
+    scroller.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); go(current() + (e.key === 'ArrowRight' ? 1 : -1)); }
+    });
+
+    // Open on the starting cover; again once the page has loaded, since a reload restores the old
+    // scroll position over it.
+    const begin = () => { go(Number(scroller.dataset.start) || 0, false); if (!native) turn(); shown = current(); };
+    begin();
+    if (document.readyState !== 'complete') addEventListener('load', begin, { once: true });
+    addEventListener('resize', () => { go(shown, false); if (!native) turn(); });
+  }
+</script>

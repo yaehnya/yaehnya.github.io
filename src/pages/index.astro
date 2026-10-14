@@ -1,0 +1,21 @@
+---
+// Home: the intro (once per visit), then a white Cover Flow of photos, songs and news.
+import Base from '../layouts/Base.astro';
+import Intro from '../components/Intro.astro';
+import CoverFlow from '../components/CoverFlow.astro';
+import { site } from '../data/site';
+---
+
+<Base page="home">
+  <!-- Decide on the intro before the first paint, so the home never flashes first. -->
+  <script is:inline slot="head">
+    try { if (!sessionStorage.getItem('yeyo-intro')) document.documentElement.setAttribute('data-intro', ''); } catch {}
+  </script>
+
+  <Intro />
+
+  <main>
+    <h1 class="sr-only">{site.name}</h1>
+    <CoverFlow />
+  </main>
+</Base>

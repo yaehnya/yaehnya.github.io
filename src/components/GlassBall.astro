@@ -1,0 +1,46 @@
+---
+// A small liquid-glass sphere, from liquid-glass-react (GlassOrb in Glass.tsx). The glass is drawn in
+// the browser; until then, and without JavaScript, an SVG sphere (Fresnel edge, caustic, highlight,
+// rim) stands in.
+import { GlassOrb } from './Glass.tsx';
+interface Props { size?: number; id?: string }
+const { size = 56, id = 'gb' } = Astro.props;
+---
+
+<span class="ball" style={`--size: ${size}px`}>
+  <GlassOrb client:only="react" size={size}>
+  <svg class="face" slot="fallback" viewBox="0 0 48 48" aria-hidden="true">
+    <defs>
+      <radialGradient id={`${id}-body`} cx="50%" cy="50%" r="50%">
+        <stop offset=".5" stop-color="#fff" stop-opacity="0" />
+        <stop offset=".84" stop-color="#c7cfdb" stop-opacity=".32" />
+        <stop offset="1" stop-color="#7f8a9c" stop-opacity=".62" />
+      </radialGradient>
+      <radialGradient id={`${id}-caustic`} cx="60%" cy="76%" r="30%">
+        <stop offset="0" stop-color="#fff" stop-opacity=".7" />
+        <stop offset="1" stop-color="#fff" stop-opacity="0" />
+      </radialGradient>
+      <radialGradient id={`${id}-spec`} cx="35%" cy="27%" r="24%">
+        <stop offset="0" stop-color="#fff" stop-opacity="1" />
+        <stop offset=".45" stop-color="#fff" stop-opacity=".55" />
+        <stop offset="1" stop-color="#fff" stop-opacity="0" />
+      </radialGradient>
+      <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#fff" />
+        <stop offset=".55" stop-color="#fff" stop-opacity=".2" />
+        <stop offset="1" stop-color="#000" stop-opacity=".35" />
+      </linearGradient>
+    </defs>
+    <circle cx="24" cy="24" r="22" fill={`url(#${id}-body)`} />
+    <circle cx="24" cy="24" r="22" fill={`url(#${id}-caustic)`} />
+    <circle cx="24" cy="24" r="22" fill={`url(#${id}-spec)`} />
+    <circle cx="24" cy="24" r="21.6" fill="none" stroke={`url(#${id}-rim)`} stroke-width="1" />
+  </svg>
+  </GlassOrb>
+</span>
+
+<style>
+  .ball { position: relative; display: inline-block; width: var(--size); height: var(--size); }
+  .face { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .face { overflow: visible; filter: drop-shadow(0 7px 8px rgba(0, 0, 0, .18)) drop-shadow(0 1px 1px rgba(0, 0, 0, .15)); }
+</style>

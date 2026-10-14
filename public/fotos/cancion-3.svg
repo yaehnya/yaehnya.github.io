@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1100" width="1600" height="1100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e6e6e6"/><stop offset="1" stop-color="#bdbdbd"/></linearGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .09"/></feComponentTransfer></filter>
+  </defs>
+  <rect width="1600" height="1100" fill="url(#bg)"/>
+  <g filter="url(#soft)" fill="#262626" opacity=".85" transform="rotate(90 800 550)"><ellipse cx="760" cy="59" rx="72" ry="90"/>
+    <path d="M625 212 Q760 158 895 212 L931 590 Q760 635 589 590 Z"/>
+    <path d="M652 581 L697 1085 L746.5 1085 L755.5 590 Z"/>
+    <path d="M868 581 L823 1085 L773.5 1085 L764.5 590 Z"/></g>
+  <rect width="1600" height="1100" filter="url(#grain)"/>
+  <text x="36" y="1064" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="5" fill="#6a6a6a">CANCIÓN 03</text>
+</svg>

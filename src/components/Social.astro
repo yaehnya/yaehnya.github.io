@@ -1,0 +1,36 @@
+---
+// Spotify, YouTube and Instagram floating at the bottom of every page, each a drop of liquid glass
+// (liquid-glass-react, see Glass.tsx) with the logo inside. The glass needs the browser, so it is drawn
+// there; until then, and without JavaScript, the plain logos stand in.
+import SocialGlass from './Glass.tsx';
+import { site } from '../data/site';
+
+interface Props { tone?: 'dark' | 'light' }   // light: the page under it is dark
+const { tone = 'dark' } = Astro.props;
+
+const links = [
+  { id: 'spotify', label: 'Spotify', href: site.social.spotify },
+  { id: 'youtube', label: 'YouTube', href: site.social.youtube },
+  { id: 'instagram', label: 'Instagram', href: site.social.instagram },
+] as const;
+---
+
+<nav class="social" aria-label="Redes" data-tone={tone}>
+  <SocialGlass client:only="react" links={[...links]}>
+    <Fragment slot="fallback">
+      {links.map(l => <a class="social-link plain" href={l.href} target="_blank" rel="noopener">{l.label}</a>)}
+    </Fragment>
+  </SocialGlass>
+</nav>
+
+<style>
+  .social {
+    position: fixed; left: 50%; bottom: 20px; z-index: 20; translate: -50% 0;
+    display: flex; gap: 18px; align-items: center; view-transition-name: social;
+  }
+  .social :global(.social-link) { display: block; color: var(--ink); transition: scale .35s var(--bounce); }
+  .social[data-tone='light'] :global(.social-link) { color: #fff; }
+  .social :global(.social-link:hover) { scale: 1.08; }
+  .social :global(.social-link svg) { width: 24px; height: 24px; }
+  .social :global(.plain) { font: 400 11px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+</style>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 1100" width="1500" height="1100">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f0f0"/><stop offset="1" stop-color="#cbcbcb"/></linearGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="40"/></filter>
+    <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="table" tableValues="0 .09"/></feComponentTransfer></filter>
+  </defs>
+  <rect width="1500" height="1100" fill="url(#bg)"/>
+  <g filter="url(#soft)" fill="#262626" opacity=".85" transform="rotate(0 750 550)"><ellipse cx="750" cy="175.8" rx="62.400000000000006" ry="78"/>
+    <path d="M633 308.4 Q750 261.6 867 308.4 L898.2 636 Q750 675 601.8 636 Z"/>
+    <path d="M656.4 628.2 L695.4 1065 L738.3 1065 L746.1 636 Z"/>
+    <path d="M843.6 628.2 L804.6 1065 L761.7 1065 L753.9 636 Z"/></g>
+  <rect width="1500" height="1100" filter="url(#grain)"/>
+  <text x="36" y="1064" font-family="Helvetica, Arial, sans-serif" font-size="20" letter-spacing="5" fill="#6a6a6a">FOTO 06</text>
+</svg>
