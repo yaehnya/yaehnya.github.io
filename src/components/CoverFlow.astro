@@ -21,8 +21,8 @@ const start = Math.max(0, items.findIndex(c => 'start' in c && c.start));
         return (
           <li data-title={c.title} data-subtitle={c.subtitle ?? ''}>
             <Tag class="cover" href={c.href} data-kind={c.kind} draggable="false">
-              <img class="art" src={c.image} alt={c.alt} loading={near ? 'eager' : 'lazy'} draggable="false" />
-              <img class="reflection" src={c.image} alt="" aria-hidden="true" loading={near ? 'eager' : 'lazy'} draggable="false" />
+              <img class="art" src={c.image} alt={c.alt} width="600" height="600" loading={near ? 'eager' : 'lazy'} draggable="false" />
+              <img class="reflection" src={c.image} alt="" aria-hidden="true" width="600" height="600" loading={near ? 'eager' : 'lazy'} draggable="false" />
             </Tag>
           </li>
         );

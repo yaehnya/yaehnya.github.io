@@ -218,7 +218,7 @@ const first = songs[0];
   /* A magazine photo credit, bottom left. */
   .credit {
     position: absolute; left: 24px; bottom: 26px; z-index: 3; max-width: min(46ch, calc(100% - 140px)); margin: 0;
-    color: var(--muted); font: 400 9px/1.5 var(--sans); letter-spacing: .1em; text-transform: uppercase;
+    color: var(--muted); font: 400 10.5px/1.5 var(--sans); letter-spacing: .08em; text-transform: uppercase;
   }
   .credit a { color: inherit; text-decoration: none; }
   .credit a:hover { color: var(--ink); }
@@ -256,6 +256,11 @@ const first = songs[0];
   if (intro && root.hasAttribute('data-intro')) {
     const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     const $ = <T extends Element = HTMLElement>(s: string) => intro.querySelector<T>(s)!;
+
+    // While the intro is up, the page behind it is out of reach: no Tab into it, nothing read aloud.
+    const behind = [...document.getElementById('world')!.children, document.querySelector('.social')]
+      .filter((el): el is HTMLElement => !!el && el !== intro);
+    behind.forEach(el => { el.inert = true; });
 
     // The status bar shows the real time.
     const clock = $('.clock');
@@ -344,7 +349,7 @@ const first = songs[0];
         };
         fade();
       }
-      const done = () => { root.removeAttribute('data-intro'); phones.stop(); clearInterval(clockTimer); };
+      const done = () => { root.removeAttribute('data-intro'); phones.stop(); clearInterval(clockTimer); behind.forEach(el => { el.inert = false; }); };
       intro.addEventListener('transitionend', e => { if (e.target === intro) done(); });
       setTimeout(done, 1300);                                  // in case the transition never runs
       intro.classList.add('leaving');

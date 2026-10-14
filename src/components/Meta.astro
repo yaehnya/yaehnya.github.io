@@ -1,0 +1,36 @@
+---
+// What a shared link shows (WhatsApp, Instagram, X, iMessage) and what search engines read. Links and
+// the picture have to be absolute, so they need the site's domain: `site` in astro.config.mjs, set
+// from SITE_URL when building. Without it the tags still go out, relative, and the share preview will
+// not show the picture.
+import { site as data } from '../data/site';
+
+interface Props {
+  title: string;               // the full title, as in <title>
+  description: string;
+  image?: string;              // 1200 × 630, under public/
+  imageAlt?: string;
+}
+const { title, description, image = '/og/yeyo.jpg', imageAlt = `${data.name}: las portadas en Cover Flow` } = Astro.props;
+const base = Astro.site;
+const url = base ? new URL(Astro.url.pathname, base).href : undefined;
+const picture = base ? new URL(image, base).href : image;
+---
+
+<meta name="description" content={description} />
+{url && <link rel="canonical" href={url} />}
+<meta name="theme-color" content="#ffffff" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={data.name} />
+<meta property="og:locale" content="es_MX" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{url && <meta property="og:url" content={url} />}
+<meta property="og:image" content={picture} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content={imageAlt} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={picture} />

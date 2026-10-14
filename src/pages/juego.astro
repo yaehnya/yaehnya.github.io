@@ -5,6 +5,7 @@
 import '@fontsource-variable/inter-tight';
 import Bolaweb from '../components/Bolaweb.astro';
 import GlassBall from '../components/GlassBall.astro';
+import Meta from '../components/Meta.astro';
 import { site } from '../data/site';
 import { fetchPage } from '../data/wikipedia';
 
@@ -19,6 +20,7 @@ const articleUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(titl
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{page?.title ?? `${title} — Wikipedia`}</title>
+    <Meta title={`El juego — ${site.name}`} description="Una bola de cristal empujada por un monigote se come la Wikipedia de Yeyo, letra por letra." />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     {page?.styles.map(href => <link rel="stylesheet" href={href} />)}
   </head>

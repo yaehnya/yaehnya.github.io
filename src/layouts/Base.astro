@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import Menu from '../components/Menu.astro';
+import Meta from '../components/Meta.astro';
 import Social from '../components/Social.astro';
 import Bolaweb from '../components/Bolaweb.astro';
 import { site, type Page } from '../data/site';
@@ -11,9 +12,11 @@ interface Props {
   page: Page;
   game?: boolean;        // load the ball game on this page (it starts only from a [data-bolaweb] button)
   bar?: 'dark' | 'light';  // the top bar's text colour; light on pages that open on a dark picture
+  image?: string;          // the share picture for this page, 1200 × 630 (default: public/og/yeyo.jpg)
 }
 
-const { title, description = site.description, page, game = false, bar = 'dark' } = Astro.props;
+const { title, description = site.description, page, game = false, bar = 'dark', image } = Astro.props;
+const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 
 <!doctype html>
@@ -21,8 +24,8 @@ const { title, description = site.description, page, game = false, bar = 'dark' 
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title ? `${title} — ${site.name}` : site.name}</title>
-    <meta name="description" content={description} />
+    <title>{fullTitle}</title>
+    <Meta title={fullTitle} description={description} image={image} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <slot name="head" />
   </head>

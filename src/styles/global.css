@@ -5,7 +5,7 @@
   --bg: #ffffff;
   --panel: #f0f0f0;              /* the references' light grey, behind photos */
   --ink: #0b0b0b;
-  --muted: #8a8a8a;
+  --muted: #6b6b6b;              /* 5.3:1 on white: readable at label sizes (AA) */
   --line: #e6e6e6;
   --ctl: rgba(92, 92, 92, .88);
   /* Helvetica Neue where it exists (Mac, iOS); Inter Tight, shipped with the site, everywhere else.
