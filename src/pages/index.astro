@@ -3,6 +3,7 @@
 import Base from '../layouts/Base.astro';
 import Intro from '../components/Intro.astro';
 import CoverFlow from '../components/CoverFlow.astro';
+import NowPlaying from '../components/NowPlaying.astro';
 import { site } from '../data/site';
 ---
 
@@ -13,6 +14,7 @@ import { site } from '../data/site';
   </script>
 
   <Intro />
+  <NowPlaying />
 
   <main>
     <h1 class="sr-only">{site.name}</h1>

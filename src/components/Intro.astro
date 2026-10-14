@@ -6,7 +6,7 @@
 // The way in is the site's signature: slide the iOS 4 bar ("desliza para entrar"), or on a phone,
 // turn it sideways, and the iPhone turns to landscape, as the iPhone 4's Music app did to open Cover
 // Flow: its screen turns into a Cover Flow, comes up to fill the window, and is the home page. The
-// song keeps playing. The page puts an inline script in <head> so the intro is decided before first
+// song keeps playing (scripts/player.ts; NowPlaying.astro shows it). The page puts an inline script in <head> so the intro is decided before first
 // paint.
 import { site } from '../data/site';
 const songs = site.songs.filter(s => s.audio);
@@ -120,12 +120,6 @@ const place = (d: number) => d === 0
     <a href="https://creativecommons.org/licenses/by/2.0/deed.es">CC BY 2.0</a>{' · '}Wikimedia Commons
   </p>
 </section>
-
-<!-- What is playing, once inside: the song goes on from the intro. A tap pauses it. -->
-<button class="now-playing label" type="button" hidden aria-label="Pausar la música">
-  <span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span>
-  <span class="np-title">{first?.title}</span>
-</button>
 
 <style>
   .intro { display: none; }
@@ -295,16 +289,6 @@ const place = (d: number) => d === 0
   }
   .intro.zooming .device { filter: none; }
 
-  /* Once inside: what is playing, small, top left, where the home has no logo. */
-  .now-playing {
-    position: fixed; top: 16px; left: 20px; z-index: 31; display: inline-flex; align-items: center; gap: 9px;
-    max-width: calc(100vw - 140px); padding: 6px 0; border: 0; background: none; color: var(--ink); cursor: pointer;
-  }
-  .now-playing[hidden] { display: none; }
-  .np-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-transform: none; letter-spacing: .02em; font-weight: 600; }
-  .np-eq { display: inline-flex; gap: 2px; align-items: end; height: 11px; }
-  .np-eq i { width: 2.5px; height: 100%; background: currentColor; transform-origin: bottom; scale: 1 .35; }
-  .now-playing.paused .np-title { opacity: .55; }
   /* A magazine photo credit, bottom left. */
   .credit {
     position: absolute; left: 24px; bottom: 26px; z-index: 3; max-width: min(46ch, calc(100% - 140px)); margin: 0;
@@ -329,9 +313,6 @@ const place = (d: number) => d === 0
     .phone { animation: phone-in 1.1s cubic-bezier(.2, .8, .2, 1) 2.1s both; }
     .unlock, .credit, .turn-hint { animation: fade 0.8s ease 3.3s both; }
     .hint { animation: sweep 2.6s linear infinite; }
-    .now-playing:not(.paused) .np-eq i { animation: eq .8s ease-in-out infinite alternate; }
-    .now-playing .np-eq i:nth-child(2) { animation-duration: .55s; }
-    .now-playing .np-eq i:nth-child(3) { animation-duration: .7s; }
     .intro.playing .eq i { animation: eq .9s ease-in-out infinite alternate; }
     .intro.playing .eq i:nth-child(2) { animation-duration: .6s; }
     .intro.playing .eq i:nth-child(3) { animation-duration: .75s; }
@@ -350,6 +331,7 @@ const place = (d: number) => d === 0
 
 <script>
   import { Earphones } from '../scripts/earphones.js';
+  import { player, load } from '../scripts/player';
 
   const root = document.documentElement;
   const intro = document.querySelector<HTMLElement>('.intro');
@@ -363,8 +345,6 @@ const place = (d: number) => d === 0
       .filter((el): el is HTMLElement => !!el && el !== intro);
     behind.forEach(el => { el.inert = true; });
 
-    const chip = document.querySelector<HTMLButtonElement>('.now-playing')!;
-
     // The status bar shows the real time.
     const clock = $('.clock');
     const showTime = () => { const d = new Date(); clock.textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
@@ -377,8 +357,6 @@ const place = (d: number) => d === 0
 
     // The player.
     const rows = [...intro.querySelectorAll<HTMLButtonElement>('[data-track]')];
-    const player = new Audio();
-    player.preload = 'none';
     let current = -1, audio: AudioContext | null = null;
     const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -400,7 +378,6 @@ const place = (d: number) => d === 0
       $('.title').textContent = row.dataset.title!;
       $('.year').textContent = row.dataset.year || '';
       $('.now b').textContent = row.dataset.title!;
-      chip.querySelector('.np-title')!.textContent = row.dataset.title!;
       rows.forEach((r, k) => r.classList.toggle('current', k === i));
     };
 
@@ -417,7 +394,7 @@ const place = (d: number) => d === 0
     };
 
     const play = (i: number) => {
-      if (i !== current) { current = i; player.src = rows[i].dataset.src!; show(i); }
+      if (i !== current) { current = i; load(rows[i].dataset.src!, rows[i].dataset.title!); show(i); }
       listen();
       player.play().catch(() => {});
     };
@@ -454,7 +431,6 @@ const place = (d: number) => d === 0
       gone = true;
       try { sessionStorage.setItem('yeyo-intro', '1'); } catch { /* private mode: it will show again */ }
       phones.stop();
-      if (!player.paused) showChip();
       intro.classList.add('turning');
       if (still) {
         root.classList.add('arriving');
@@ -475,19 +451,6 @@ const place = (d: number) => d === 0
       root.classList.add('arriving');
       await intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 480, easing: 'ease-out', fill: 'forwards' }).finished;
       done();
-    };
-
-    // What is playing, once inside: top left; a tap pauses it or goes on.
-    const showChip = () => {
-      const sync = () => {
-        chip.classList.toggle('paused', player.paused);
-        chip.setAttribute('aria-label', player.paused ? 'Seguir escuchando' : 'Pausar la música');
-      };
-      sync();
-      chip.hidden = false;
-      player.addEventListener('play', sync);
-      player.addEventListener('pause', sync);
-      chip.addEventListener('click', () => { if (player.paused) player.play().catch(() => {}); else player.pause(); });
     };
 
     // The slider: drag the knob most of the way and let go, or just press it (or Enter on it).

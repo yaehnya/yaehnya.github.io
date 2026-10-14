@@ -1,0 +1,45 @@
+---
+// What is playing, top left on the home, where it has no logo: three bars that move with the song and
+// its title. It shows up once something plays (from the iPhone in the intro, or from the back of a
+// cover) and a tap pauses it or goes on. Hidden while the intro is up: the iPhone shows it there.
+---
+
+<button class="now-playing label" type="button" hidden aria-label="Pausar la música">
+  <span class="np-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+  <span class="np-title"></span>
+</button>
+
+<style>
+  .now-playing {
+    position: fixed; top: 16px; left: 20px; z-index: 31; display: inline-flex; align-items: center; gap: 9px;
+    max-width: calc(100vw - 140px); padding: 6px 0; border: 0; background: none; color: var(--ink); cursor: pointer;
+  }
+  .now-playing[hidden], :global(html[data-intro]) .now-playing { display: none; }
+  .np-title { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-transform: none; letter-spacing: .02em; font-weight: 600; }
+  .np-eq { display: inline-flex; gap: 2px; align-items: end; height: 11px; }
+  .np-eq i { width: 2.5px; height: 100%; background: currentColor; transform-origin: bottom; scale: 1 .35; }
+  .now-playing.paused .np-title { opacity: .55; }
+  @media (prefers-reduced-motion: no-preference) {
+    .now-playing:not(.paused) .np-eq i { animation: bar .8s ease-in-out infinite alternate; }
+    .now-playing:not(.paused) .np-eq i:nth-child(2) { animation-duration: .55s; }
+    .now-playing:not(.paused) .np-eq i:nth-child(3) { animation-duration: .7s; }
+  }
+  @keyframes bar { from { scale: 1 .25; } to { scale: 1 1; } }
+</style>
+
+<script>
+  import { player, toggle, nowPlaying, type Track } from '../scripts/player';
+
+  const chip = document.querySelector<HTMLButtonElement>('.now-playing');
+  if (chip) {
+    const name = chip.querySelector('.np-title')!;
+    const sync = () => {
+      chip.classList.toggle('paused', player.paused);
+      chip.setAttribute('aria-label', player.paused ? `Seguir escuchando ${nowPlaying()?.title ?? ''}` : 'Pausar la música');
+    };
+    addEventListener('yeyo:track', e => { name.textContent = (e as CustomEvent<Track>).detail.title; });
+    player.addEventListener('play', () => { chip.hidden = false; sync(); });
+    player.addEventListener('pause', sync);
+    chip.addEventListener('click', toggle);
+  }
+</script>
