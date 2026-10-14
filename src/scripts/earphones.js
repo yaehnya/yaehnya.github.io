@@ -28,8 +28,9 @@ const REMOTE_SPAN = 6;        // particles on each side of the remote's centre h
 const CABLE = { file: 'cable.webp', body: 0.704, edge: '#b9b3a7', core: '#f2f0ea', shine: 'rgba(255,255,255,.9)', shadow: 'rgba(70,55,35,.24)' };
 
 export class Earphones {
-  constructor(canvas, phone, root, { pieces = '/fotos/' } = {}) {
-    this.canvas = canvas; this.phone = phone; this.root = root;
+  // `ignore`: a selector for things on the page the cables never take a press from (a slider, say).
+  constructor(canvas, phone, root, { pieces = '/fotos/', ignore = null } = {}) {
+    this.canvas = canvas; this.phone = phone; this.root = root; this.ignore = ignore;
     this.g = canvas.getContext('2d');
     this.img = {};
     for (const [k, { file }] of Object.entries(PIECES)) { this.img[k] = new Image(); this.img[k].src = pieces + file; }
@@ -213,7 +214,7 @@ export class Earphones {
   }
 
   down(e) {
-    if (!this.running) return;
+    if (!this.running || (this.ignore && e.target.closest?.(this.ignore))) return;
     const id = this.nearest(e.clientX, e.clientY);
     if (id === null) return;
     e.preventDefault(); e.stopPropagation();
