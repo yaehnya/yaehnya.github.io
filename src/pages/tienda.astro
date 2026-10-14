@@ -32,5 +32,14 @@ import { site } from '../data/site';
   .price { color: var(--muted); }
   .products a:hover .name { text-decoration: underline; text-underline-offset: 3px; }
   .all { margin-top: 64px; text-align: center; }
+
+  /* Each product turns to face you as it comes up, as a cover does in the middle of Cover Flow. */
+  @keyframes turn-in { from { transform: perspective(900px) rotateY(-55deg) translateZ(-60px); opacity: 0; } }
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .products li { animation: turn-in linear both; }
+      .products > li { animation-timeline: view(); animation-range: entry 0% entry 85%; }
+    }
+  }
   .all a:hover { text-decoration: underline; text-underline-offset: 3px; }
 </style>

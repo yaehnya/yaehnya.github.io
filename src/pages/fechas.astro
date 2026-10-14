@@ -19,8 +19,8 @@ const { tour } = site;
       <p class="sub">{tour.subtitle}</p>
       {shows.length > 0 ? (
         <ol class="dates">
-          {shows.map(s => (
-            <li>
+          {shows.map((s, i) => (
+            <li style={`--i: ${i}`}>
               {s.tickets && !s.soldOut
                 ? <a class="band" href={s.tickets} target="_blank" rel="noopener">{short(s.date)} {s.city}</a>
                 : <span class:list={['band', { sold: s.soldOut }]}>{short(s.date)} {s.city}{s.soldOut && <small> agotado</small>}</span>}
@@ -60,6 +60,18 @@ const { tour } = site;
   a.band:hover, a.band:focus-visible { background: rgba(0, 0, 0, .95); }
   .sold { text-decoration: line-through; text-decoration-thickness: .06em; }
   .sold small { display: inline-block; margin-left: .5em; font-size: .55em; letter-spacing: .04em; text-transform: uppercase; }
+
+  /* The title lights up like a sign (one flicker, no strobing), then the dates come in one by one,
+     like a setlist; the picture settles behind them. */
+  @media (prefers-reduced-motion: no-preference) {
+    .art { animation: poster-in 1.6s var(--ease-entrada) both; }
+    .title { animation: sign-on 1.1s .2s linear both; }
+    .sub { animation: sign-on 1.1s .45s linear both; }
+    .dates li { animation: band-in var(--dur-media) var(--ease-entrada) both; animation-delay: calc(.8s + var(--i) * 90ms); }
+  }
+  @keyframes poster-in { from { scale: 1.08; filter: brightness(.6); } }
+  @keyframes sign-on { 0% { opacity: 0; } 30% { opacity: .9; } 40% { opacity: .35; } 60%, 100% { opacity: 1; } }
+  @keyframes band-in { from { opacity: 0; translate: 24px 0; clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
 
   @media (max-width: 760px) {
     .art { object-position: 38% 50%; }

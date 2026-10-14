@@ -22,7 +22,7 @@ const year = (iso?: string) => iso?.slice(0, 4);
         const near = Math.abs(i - start) < 4;
         const song = c.song !== undefined ? site.songs[c.song] : undefined;
         return (
-          <li data-title={c.title} data-subtitle={c.subtitle ?? ''}>
+          <li data-title={c.title} data-subtitle={c.subtitle ?? ''} data-song={c.song}>
             <div class="cover" data-kind={c.kind}>
               <div class="card">
                 <button class="front" type="button" aria-label={`${c.title}: dar la vuelta`} aria-expanded="false" draggable="false">
@@ -302,6 +302,8 @@ const year = (iso?: string) => iso?.slice(0, 4);
       if (i !== current()) { e.preventDefault(); unflip(); go(i); return; }
       const keyboard = (e as MouseEvent).detail === 0;
       const listen = t.closest<HTMLButtonElement>('.listen');
+      // Going to the song's page: its back travels there and becomes its cover (a view transition).
+      if (t.closest('.more') && li.dataset.song) li.querySelector<HTMLElement>('.back')!.style.viewTransitionName = `portada-${+li.dataset.song + 1}`;
       if (t.closest('.front')) flip(li, true, keyboard);
       else if (t.closest('.turn')) flip(li, false, keyboard);
       else if (listen) {

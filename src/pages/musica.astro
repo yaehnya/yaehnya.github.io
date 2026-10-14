@@ -25,7 +25,7 @@ const dot = (iso: string) => iso.split('-').reverse().join('.');   // 2026-07-29
       <article class="song" id={`cancion-${i + 1}`} aria-label={s.title}>
         <figure>
           <figcaption>{s.caption}</figcaption>
-          <img src={s.image} alt={`Portada de ${s.title}`} width={s.width} height={s.height} loading="lazy" />
+          <img src={s.image} alt={`Portada de ${s.title}`} width={s.width} height={s.height} loading="lazy" style={`view-transition-name: portada-${i + 1}`} />
         </figure>
         <footer class="folio label">
           <span>{two(i + 1)} / {total}{s.date && ` — ${dot(s.date)}`}</span>
@@ -70,6 +70,21 @@ const dot = (iso: string) => iso.split('-').reverse().join('.');   // 2026-07-29
   .folio { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 14px 48px 0; color: var(--muted); }
   .listen { display: flex; gap: 18px; color: var(--ink); }
   .listen a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+  /* Leafing through it: as you scroll past a page it turns away around its left edge, like a
+     magazine's, and the next one is already there under it; a cover settles as its page arrives. */
+  .cover, .song { transform-origin: left center; }
+  @keyframes leaf { to { transform: perspective(2200px) rotateY(-62deg); opacity: .15; } }
+  @keyframes settle-in { from { scale: 1.05; } }
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @media (prefers-reduced-motion: no-preference) {
+      .cover, .song { animation: leaf linear both; }
+      figure img { animation: settle-in linear both; }
+      /* Timelines in rules of their own (the minifier would fold them into the shorthand). */
+      .songs > .cover, .songs > .song { animation-timeline: view(); animation-range: exit 15% exit 100%; }
+      .song figure img { animation-timeline: view(); animation-range: entry 10% cover 45%; }
+    }
+  }
 
   @media (max-width: 760px) {
     .cover-mark { top: 72px; }
