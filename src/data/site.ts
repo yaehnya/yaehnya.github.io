@@ -43,6 +43,8 @@ export interface Cover {
 
 export interface Product {
   name: string;
+  kind: 'ropa' | 'musica';   // the App Store's segments on Tienda: Todo · Ropa · Música
+  detail?: string;       // the small grey line under the name
   price: string;
   image: string;
   href: string;          // the product in the external store
@@ -117,11 +119,12 @@ export const site = {
     { date: '2026-12-05', city: 'Monterrey', venue: 'Teatro de ejemplo', soldOut: true },
   ] satisfies Show[],
 
+  // Tienda, as iOS 4's App Store. [PENDIENTE: productos, fotos, precios y enlaces reales]
   shop: 'https://example.com/tienda',
   products: [
-    { name: 'Playera negra', price: '$450 MXN', image: '/fotos/producto-1.svg', href: 'https://example.com/tienda' },
-    { name: 'Playera blanca', price: '$450 MXN', image: '/fotos/producto-2.svg', href: 'https://example.com/tienda' },
-    { name: 'Vinil', price: '$700 MXN', image: '/fotos/producto-3.svg', href: 'https://example.com/tienda' },
+    { name: 'Playera negra', kind: 'ropa', detail: 'Algodón · S a XL', price: '$450 MXN', image: '/fotos/producto-1.svg', href: 'https://example.com/tienda' },
+    { name: 'Playera blanca', kind: 'ropa', detail: 'Algodón · S a XL', price: '$450 MXN', image: '/fotos/producto-2.svg', href: 'https://example.com/tienda' },
+    { name: 'Vinil', kind: 'musica', detail: 'Los dos sencillos en 7"', price: '$700 MXN', image: '/fotos/producto-3.svg', href: 'https://example.com/tienda' },
   ] satisfies Product[],
 
   contact: [
