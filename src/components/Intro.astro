@@ -28,8 +28,8 @@ const place = (d: number) => d === 0
   <div class="phone" role="group" aria-label="iPhone con la música de Yeyo">
     <div class="case">
       <!-- The phone itself is the one in the reference photo, cleaned up (see tools/photo_assets.py). -->
-      <img class="device" src="/fotos/iphone.webp" alt="" width="498" height="926" fetchpriority="high" />
-        <div class="screen">
+      <img class="photo" src="/fotos/iphone.webp" alt="" width="498" height="926" fetchpriority="high" />
+        <div class="lcd">
           <div class="ios">
             <div class="status">
               <span class="carrier"><span class="bars"><i></i><i></i><i></i><i></i><i></i></span> Telcel</span>
@@ -134,16 +134,16 @@ const place = (d: number) => d === 0
     position: absolute; left: 50%; top: 57svh; z-index: 1; width: calc(var(--h) * 498 / 926); height: var(--h); translate: -50% -50%;
   }
   .case { position: absolute; inset: 0; }
-  .device {
+  .photo {
     display: block; width: 100%; height: 100%;
     filter: drop-shadow(0 22px 26px rgba(70, 52, 30, .2)) drop-shadow(0 4px 5px rgba(50, 38, 20, .2));
   }
   /* Where the photo's screen is, measured on the straightened photo. */
-  .screen { position: absolute; left: 9.639%; top: 17.495%; width: 80.723%; height: 65.011%; overflow: hidden; background: #000; }
+  .lcd { position: absolute; left: 9.639%; top: 17.495%; width: 80.723%; height: 65.011%; overflow: hidden; background: #000; }
   /* The glass over the display: the reflections, smudges and dust of a real iPhone 4's glass
      (cristal.webp, photographed with the screen off, so it only adds light), a faint sheen, the
      shadow the glass's edge casts on the display, and the photo's grain. */
-  .glass, .glare, .screen::after { position: absolute; inset: 0; pointer-events: none; }
+  .glass, .glare, .lcd::after { position: absolute; inset: 0; pointer-events: none; }
   .glass { background: url('/fotos/cristal.webp') 0 0 / 100% 100%; mix-blend-mode: screen; opacity: .75; }
   .glare {
     background:
@@ -153,7 +153,7 @@ const place = (d: number) => d === 0
   }
   /* A lit LCD photographs a little dimmer, softer and cooler than paper white. */
   .ios { filter: brightness(.95) contrast(.95) saturate(.92) blur(.15px); }
-  .screen::after {
+  .lcd::after {
     content: ''; background: rgb(212, 222, 240); mix-blend-mode: multiply; opacity: .4;
     box-shadow: inset 0 1.5px 2px rgba(0, 0, 0, .55), inset 0 0 10px rgba(0, 0, 0, .25);
   }
@@ -308,7 +308,7 @@ const place = (d: number) => d === 0
 <script>
   import { Earphones } from '../scripts/earphones.js';
   import { player, load } from '../scripts/player';
-  import { unlock, vibrate } from '../scripts/sounds';
+  import { unlock as unlockSound, vibrate } from '../scripts/sounds';
 
   const root = document.documentElement;
   const intro = document.querySelector<HTMLElement>('.intro');
@@ -318,8 +318,7 @@ const place = (d: number) => d === 0
     const $ = <T extends Element = HTMLElement>(s: string) => intro.querySelector<T>(s)!;
 
     // While the intro is up, the page behind it is out of reach: no Tab into it, nothing read aloud.
-    const behind = [...document.getElementById('world')!.children, ...document.querySelectorAll('.statusbar, .home-btn, .now-playing')]
-      .filter((el): el is HTMLElement => el instanceof HTMLElement && el !== intro);
+    const behind = [...document.querySelectorAll<HTMLElement>('.device, .screen')];
     behind.forEach(el => { el.inert = true; });
 
     // The status bar shows the real time.
@@ -329,7 +328,7 @@ const place = (d: number) => d === 0
     const clockTimer = setInterval(showTime, 15000);
 
     // Scale the 320 × 480 app to whatever size the screen is drawn at.
-    const screen = $('.screen'), ios = $('.ios');
+    const screen = $('.lcd'), ios = $('.ios');
     new ResizeObserver(() => screen.style.setProperty('--k', String(screen.clientWidth / 320))).observe(screen);   // for the app and the Cover Flow
 
     // The player.
@@ -423,7 +422,7 @@ const place = (d: number) => d === 0
     const enter = async () => {
       if (gone) return;
       gone = true;
-      unlock();                                    // the iPhone's own unlock sound
+      unlockSound();                               // the iPhone's own unlock sound
       vibrate(20);
       try { sessionStorage.setItem('yeyo-intro', '1'); } catch { /* private mode: it will show again */ }
       phones.stop();

@@ -12,7 +12,7 @@ import { site } from '../data/site';
     try { if (!sessionStorage.getItem('yeyo-intro')) document.documentElement.setAttribute('data-intro', ''); } catch {}
   </script>
 
-  <Intro />
+  <Intro slot="overlay" />
 
   <main>
     <h1 class="sr-only">{site.name}</h1>
