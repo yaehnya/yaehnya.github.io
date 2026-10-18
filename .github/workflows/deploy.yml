@@ -1,8 +1,7 @@
 # Publica el sitio en GitHub Pages cada vez que se sube algo a la rama main.
 # GitHub compila el sitio (npm run build, que ya minifica HTML, CSS y JS) y publica la carpeta dist/.
-# La dirección pública es https://USUARIO.github.io (el repositorio debe llamarse USUARIO.github.io).
-# Con dominio propio: créalo en Settings > Pages y define la variable SITE_URL (Settings > Secrets and
-# variables > Actions > Variables) con https://tudominio.com.
+# El dominio es https://yeyotqm.life (Settings > Pages > Custom domain). Para cambiarlo sin tocar este
+# archivo, define la variable SITE_URL en Settings > Secrets and variables > Actions > Variables.
 name: Publicar en GitHub Pages
 
 on:
@@ -28,7 +27,7 @@ jobs:
         with:
           node-version: 22
         env:
-          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://yeyotqm.life' }}
 
   deploy:
     needs: build
