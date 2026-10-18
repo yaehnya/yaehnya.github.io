@@ -30,48 +30,38 @@ const place = (d: number) => d === 0
       <!-- The phone itself is the one in the reference photo, cleaned up (see tools/photo_assets.py). -->
       <img class="photo" src="/fotos/iphone.webp" alt="" width="498" height="926" fetchpriority="high" />
         <div class="lcd">
-          <div class="ios">
+          <!-- iOS 4's lock screen with a song playing, in Apple's own artwork: the cover as the wallpaper,
+               the time and date on the glass bar, the controls under it, and "desliza para desbloquear". -->
+          <div class="ios lock">
+            <img class="art" src={first?.image} alt="" width="320" height="320" />
             <div class="status">
               <span class="carrier"><span class="bars"><i></i><i></i><i></i><i></i><i></i></span> Telcel</span>
-              <span class="clock">15:53</span>
+              <svg class="padlock" viewBox="0 0 10 13" aria-hidden="true"><path d="M2.2 5.5V4a2.8 2.8 0 0 1 5.6 0v1.5" fill="none" stroke="#fff" stroke-width="1.4" /><rect x=".5" y="5.5" width="9" height="7" rx="1.2" fill="#fff" /></svg>
               <span class="battery">87% <b><i></i></b></span>
             </div>
-            <div class="nav">
-              <span class="nb back" aria-hidden="true">Artistas</span>
-              <b class="nt">{site.name.charAt(0) + site.name.slice(1).toLowerCase()}</b>
-              <button class="nb pp" type="button" aria-label="Reproducir">
-                <svg class="play" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" /></svg>
-                <svg class="pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h3.6v15H6.5zM13.9 4.5h3.6v15h-3.6z" /></svg>
-              </button>
+            <div class="lcd-bar">
+              <b class="clock">3:53</b>
+              <span class="date"></span>
             </div>
-            <div class="album">
-              <img class="art" src={first?.image} alt="" width="96" height="96" />
-              <div class="meta">
-                <span class="artist">{site.name.charAt(0) + site.name.slice(1).toLowerCase()}</span>
-                <b class="title">{first?.title}</b>
-                <span class="year">Sencillo · {first?.date?.slice(0, 4)}</span>
-                <span class="sum"></span>
+            <div class="controls">
+              <p class="now"><b class="title">{first?.title}</b><span>Yeyo</span></p>
+              <div class="transport">
+                <button class="prev" type="button" aria-label="Canción anterior"><img src="/ios/ui/now-playing-transport-previous.png" alt="" /></button>
+                <button class="pp" type="button" aria-label="Reproducir"><img class="play" src="/ios/ui/now-playing-transport-play.png" alt="" /><img class="pause" src="/ios/ui/now-playing-transport-pause.png" alt="" /></button>
+                <button class="next" type="button" aria-label="Canción siguiente"><img src="/ios/ui/now-playing-transport-next.png" alt="" /></button>
               </div>
             </div>
-            <ol class="tracks">
+            <div class="bottom-bar">
+              <div class="unlock">
+                <span class="hint" aria-hidden="true">desliza para desbloquear</span>
+                <button class="knob" type="button" aria-label="Desliza para desbloquear y entrar"><img src="/ios/ui/bottombarknobgray.png" alt="" /></button>
+              </div>
+            </div>
+            <ol class="tracks" hidden>
               {songs.map((s, i) => (
-                <li>
-                  <button type="button" data-track={i} data-src={s.audio} data-title={s.title} data-cover={s.image} data-year={s.date?.slice(0, 4)}>
-                    <span class="n">{i + 1}</span>
-                    <svg class="spk" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
-                    <span class="t">{s.title}</span>
-                    <span class="d">–:––</span>
-                  </button>
-                </li>
+                <li><button type="button" data-track={i} data-src={s.audio} data-title={s.title} data-cover={s.image}>{s.title}</button></li>
               ))}
             </ol>
-            <nav class="tabs" aria-hidden="true">
-              <span><svg viewBox="0 0 24 24"><path d="M4 6h10M4 11h10M4 16h6" /><path d="M17 17V7l4-1" /><circle cx="15.5" cy="17.5" r="2" /></svg>Listas</span>
-              <span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" /></svg>Artistas</span>
-              <span class="on"><svg viewBox="0 0 24 24"><path d="M9 18V6l11-2v12" /><circle cx="6.5" cy="18" r="2.6" /><circle cx="17.5" cy="16" r="2.6" /></svg>Canciones</span>
-              <span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="1.5" /><path d="M7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4" /></svg>Videos</span>
-              <span><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>Más</span>
-            </nav>
           </div>
           <div class="flow-mini" aria-hidden="true">
             {mini.map(c => (
@@ -88,14 +78,6 @@ const place = (d: number) => d === 0
   </div>
 
   <canvas class="cables" aria-hidden="true"></canvas>
-  <!-- iOS 4's "slide to unlock": drag the knob, or press it, or Enter on it. On a phone, turning it
-       sideways does the same. -->
-  <div class="unlock">
-    <span class="hint" aria-hidden="true">desliza para entrar</span>
-    <button class="knob" type="button" aria-label="Entrar: desliza para entrar">
-      <svg viewBox="0 0 28 20" aria-hidden="true"><path d="M2 7.5h13V2l11 8-11 8v-5.5H2z" /></svg>
-    </button>
-  </div>
   <p class="turn-hint label">o gira el teléfono</p>
   <!-- The EarPods and the connector are cut from these photos; their licences ask for the credit. -->
   <p class="credit">
@@ -158,66 +140,63 @@ const place = (d: number) => d === 0
     box-shadow: inset 0 1.5px 2px rgba(0, 0, 0, .55), inset 0 0 10px rgba(0, 0, 0, .25);
   }
 
-  /* The Music app, as iOS 4's iPod drew an album, at the iPhone 4's 320 × 480 points and scaled to the
-     screen: the black bar, the album's header, its songs in alternating rows (the one playing with the
-     blue speaker), and the black tab bar with Canciones lit. */
+  /* iOS 4's lock screen, at the iPhone 4's 320 × 480 points and scaled to the screen. */
   .ios {
-    position: absolute; left: 0; top: 0; width: 320px; height: 480px; transform-origin: 0 0; scale: var(--k, 1);
-    display: grid; grid-template-rows: 20px 44px auto 1fr 49px;
-    background: #fff; color: #000; font: 14px/1.25 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    letter-spacing: 0; -webkit-font-smoothing: antialiased; text-transform: none;
+    position: absolute; left: 0; top: 0; width: 320px; height: 480px; transform-origin: 0 0; scale: var(--k, 1); overflow: hidden;
+    background: #000; color: #fff; font: 14px/1.25 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: 0;
+    -webkit-font-smoothing: antialiased; text-transform: none;
   }
-  .status { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 5px; background: #000; color: #fff; font-size: 12px; font-weight: 700; }
+  .art { position: absolute; left: 0; top: 60px; width: 320px; height: 320px; object-fit: cover; }
+  .status { position: absolute; left: 0; right: 0; top: 0; z-index: 2; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; height: 20px; padding: 0 5px; background: rgba(0, 0, 0, .55); font-size: 12px; font-weight: 700; }
   .carrier { display: flex; align-items: center; gap: 3px; }
-  .bars { display: flex; align-items: end; gap: 1px; height: 11px; }
+  .bars { display: flex; align-items: end; gap: 1px; height: 10px; }
   .bars i { width: 3px; background: #fff; }
-  .bars i:nth-child(1) { height: 4px; } .bars i:nth-child(2) { height: 5.5px; } .bars i:nth-child(3) { height: 7px; }
-  .bars i:nth-child(4) { height: 8.5px; } .bars i:nth-child(5) { height: 10px; opacity: .35; }
-  .battery { display: flex; justify-content: end; align-items: center; gap: 4px; }
-  .battery b { position: relative; width: 22px; height: 10px; border: 1px solid #fff; border-radius: 2px; }
+  .bars i:nth-child(1) { height: 3px; } .bars i:nth-child(2) { height: 5px; } .bars i:nth-child(3) { height: 7px; }
+  .bars i:nth-child(4) { height: 9px; } .bars i:nth-child(5) { height: 10px; opacity: .3; }
+  .padlock { width: 9px; height: 12px; }
+  .battery { display: flex; justify-content: end; align-items: center; gap: 3px; }
+  .battery b { position: relative; width: 21px; height: 10px; border: 1px solid #fff; border-radius: 2px; }
   .battery b::after { content: ''; position: absolute; right: -3px; top: 2.5px; width: 2px; height: 4px; background: #fff; border-radius: 0 1px 1px 0; }
-  .battery i { position: absolute; inset: 1px; right: 3px; background: #fff; border-radius: 1px; }
-  .nav {
-    display: grid; grid-template-columns: 76px 1fr 76px; align-items: center; padding: 0 5px; border-bottom: 1px solid #000; color: #fff;
-    background: linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .06) 50%, transparent 51%), linear-gradient(#323232, #0a0a0a);
-    text-shadow: 0 -1px 0 #000;
+  .battery i { position: absolute; inset: 1px; right: 3px; background: #fff; border-radius: .5px; }
+  /* The glass bar: Apple's, the time big and thin, the date under it. */
+  .lcd-bar {
+    position: absolute; left: 0; right: 0; top: 20px; z-index: 1; display: grid; justify-items: center; align-content: center; height: 96px;
+    background: url('/ios/ui/BarLCD.png') 0 0 / 100% 100%; text-shadow: 0 -1px 0 rgba(0, 0, 0, .6);
   }
-  .nt { text-align: center; font-size: 20px; }
-  .nb {
-    height: 30px; border: 1px solid #000; border-radius: 5px; color: #fff; font: 700 12px/28px 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: linear-gradient(#5e5e5e, #2b2b2b 50%, #1a1a1a 51%, #272727); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  .clock { font-size: 64px; font-weight: 400; line-height: 64px; letter-spacing: -1px; }
+  .date { margin-top: -2px; font-size: 16px; font-weight: 700; }
+  /* The song's controls, on Apple's dark glass under the bar. */
+  .controls {
+    position: absolute; left: 0; right: 0; top: 116px; z-index: 1; display: grid; justify-items: center; gap: 2px; height: 96px; padding-top: 8px;
+    background: url('/ios/ui/SBLockScreenControlsLCD.png') 0 0 / 100% 100%;
   }
-  .back { justify-self: start; padding: 0 8px 0 15px; clip-path: polygon(10px 0, 100% 0, 100% 100%, 10px 100%, 0 50%); }
-  .pp { justify-self: end; display: grid; place-items: center; width: 44px; padding: 0; cursor: pointer; }
-  .pp svg { width: 16px; height: 16px; fill: #fff; filter: drop-shadow(0 -1px 0 #000); }
+  .now { display: grid; justify-items: center; max-width: 280px; margin: 0; text-align: center; font-size: 12px; line-height: 15px; text-shadow: 0 -1px 0 #000; }
+  .now > * { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .now span { color: #b0b0b0; }
+  .transport { display: flex; gap: 34px; align-items: center; margin-top: 6px; }
+  .transport button { display: grid; place-items: center; width: 44px; height: 36px; padding: 0; border: 0; background: none; cursor: pointer; }
+  .transport img { width: 24px; height: auto; }
+  .transport .pp img { width: 20px; }
+  .transport button:active img { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .9)); }
   .pp .pause, .intro.playing .pp .play { display: none; }
   .intro.playing .pp .pause { display: block; }
-  .album { display: grid; grid-template-columns: 96px 1fr; gap: 10px; padding: 10px; border-bottom: 1px solid #b4b4b4; background: linear-gradient(#f2f2f2, #dcdcdc); }
-  .art { width: 96px; height: 96px; object-fit: cover; box-shadow: 0 1px 3px rgba(0, 0, 0, .45); }
-  .meta { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; text-shadow: 0 1px 0 rgba(255, 255, 255, .8); }
-  .artist { color: #545454; font-size: 14px; font-weight: 700; }
-  .title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 17px; line-height: 1.15; }
-  .year, .sum { color: #6b6b6b; font-size: 12px; }
-  .tracks { margin: 0; padding: 0; overflow: hidden; list-style: none; }
-  .tracks li:nth-child(even) button { background: #eeeeee; }
-  .tracks button {
-    display: grid; grid-template-columns: 30px 1fr auto; align-items: center; width: 100%; height: 44px; padding: 0 10px 0 4px;
-    border: 0; border-bottom: 1px solid #d6d6d6; background: #fff; color: inherit; font: inherit; text-align: left; cursor: pointer;
+  /* "desliza para desbloquear": Apple's bottom bar, its well, its knob, the light running over the words. */
+  .bottom-bar { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: grid; place-items: center; height: 96px; background: url('/ios/ui/BarBottomLock.png') 0 0 / 100% 100%; }
+  .unlock {
+    --x: 0px; position: relative; width: 280px; height: 52px; border: 0 solid;
+    border-image: url('/ios/ui/WellLock.png') 0 26 fill / 0 13px; user-select: none; touch-action: none;
   }
-  .tracks .n { text-align: center; color: #555; font-size: 15px; font-weight: 700; }
-  .tracks .spk { display: none; justify-self: center; width: 18px; height: 18px; fill: #2c7cf6; color: #2c7cf6; }
-  .tracks .t { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; font-weight: 700; }
-  .tracks .d { padding-left: 8px; color: #6b6b6b; font-size: 14px; }
-  .tracks button.current .n { display: none; }
-  .tracks button.current .spk { display: block; }
-  .tabs {
-    display: grid; grid-template-columns: repeat(5, 1fr); padding: 2px 2px 0; color: #9a9a9a; font-size: 10px; font-weight: 700;
-    background: linear-gradient(#3a3a3a, #161616 50%, #000 51%);
+  .hint {
+    position: absolute; inset: 0 0 0 62px; display: grid; place-items: center; font-size: 17px; white-space: nowrap; color: transparent; opacity: calc(1 - var(--p, 0) * 1.6);
+    background: linear-gradient(90deg, #6f6f6f 0 40%, #fff 50%, #6f6f6f 60% 100%) 0 0 / 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
   }
-  .tabs span { display: grid; justify-items: center; align-content: center; gap: 1px; margin: 1px; border-radius: 3px; }
-  .tabs svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-  .tabs .on { color: #fff; background: rgba(255, 255, 255, .14); }
-  .tabs .on svg { stroke: #49a3ff; filter: drop-shadow(0 0 3px rgba(60, 150, 255, .9)); }
+  .knob { position: absolute; left: 1px; top: 2px; width: 60px; height: 47px; padding: 0; border: 0; background: none; cursor: grab; translate: var(--x) 0; }
+  .knob img { width: 60px; height: 47px; }
+  .knob:active { cursor: grabbing; }
+  .knob:focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 9px; }
+  .unlock.back .knob { transition: translate .35s cubic-bezier(.2, .9, .3, 1.2); }
+  .unlock.done .knob { transition: translate .22s cubic-bezier(.4, 0, .2, 1); }
 
   /* The Cover Flow the screen turns into, 480 × 320 points, turned a quarter so that it stands
      upright once the phone has turned to landscape; hidden until then. */
@@ -235,37 +214,11 @@ const place = (d: number) => d === 0
   .mcap { position: absolute; left: 0; right: 0; top: 232px; display: grid; gap: 1px; margin: 0; text-align: center; font-weight: 700; font-size: 15px; }
   .mcap span { color: #4a4a4a; font-size: 12.5px; }
 
-  /* iOS 4's lock slider: a dark glossy track, a silver knob with an arrow, a light sweeping across the
-     words. */
-  .unlock {
-    --w: 260px; --pad: 4px; --kw: 66px;
-    position: absolute; right: 24px; bottom: 22px; z-index: 3; width: var(--w); height: 54px; border-radius: 12px;
-    background: linear-gradient(#2a2a2a, #050505 55%, #000);
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, .9), inset 0 -1px 0 rgba(255, 255, 255, .12), 0 1px 0 rgba(255, 255, 255, .8), 0 8px 24px rgba(0, 0, 0, .18);
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; user-select: none; touch-action: none;
-  }
-  .hint {
-    position: absolute; inset: 0 0 0 calc(var(--kw) + var(--pad)); display: grid; place-items: center;
-    font-size: 17px; letter-spacing: -.01em; opacity: calc(1 - var(--p, 0) * 1.6); color: transparent;
-    background: linear-gradient(90deg, #6e6e6e 0 38%, #fff 50%, #6e6e6e 62% 100%) 0 0 / 250% 100%;
-    -webkit-background-clip: text; background-clip: text;
-  }
-  .knob {
-    position: absolute; left: var(--pad); top: var(--pad); width: var(--kw); height: calc(100% - var(--pad) * 2);
-    display: grid; place-items: center; padding: 0; border: 0; border-radius: 9px; cursor: grab; translate: var(--x, 0) 0;
-    background: linear-gradient(#fefefe, #e2e2e2 48%, #c9c9c9 52%, #ececec);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, .7), inset 0 1px 0 #fff, inset 0 -1px 1px rgba(0, 0, 0, .15);
-  }
-  .knob:active { cursor: grabbing; }
-  .knob svg { width: 28px; height: 20px; fill: #8a8a8a; filter: drop-shadow(0 1px 0 #fff); }
-  .knob:focus-visible { outline: 2px solid #fff; outline-offset: -5px; }
-  .unlock.back .knob { transition: translate .35s cubic-bezier(.2, .9, .3, 1.2); }
-  .unlock.done .knob { transition: translate .22s cubic-bezier(.4, 0, .2, 1); }
   .turn-hint { display: none; }
 
   /* On the way in: everything but the phone goes, the phone's photo stops casting its shadow (it is
      about to be many times its size), and the Music app hands over to the Cover Flow. */
-  .intro.turning .lockup, .intro.turning .unlock, .intro.turning .turn-hint, .intro.turning .credit, .intro.turning .cables {
+  .intro.turning .lockup, .intro.turning .turn-hint, .intro.turning .credit, .intro.turning .cables {
     opacity: 0; transition: opacity .3s; animation: none;
   }
 
@@ -280,7 +233,6 @@ const place = (d: number) => d === 0
   /* On a phone: the phone a little smaller and higher, the slider across the foot, the credit on top. */
   @media (max-width: 760px) {
     .phone { --h: min(58svh, 165vw); top: 51svh; }
-    .unlock { --w: min(300px, calc(100vw - 32px)); right: auto; left: 50%; bottom: 34px; margin-left: calc(var(--w) / -2); }
     .credit { top: 8px; bottom: auto; left: 16px; right: 16px; max-width: none; text-align: center; font-size: 9.5px; }
   }
   @media (pointer: coarse) and (orientation: portrait) {
@@ -291,8 +243,8 @@ const place = (d: number) => d === 0
     .lockup { animation: appear 1.2s ease both, rise 1.1s cubic-bezier(.65, 0, .25, 1) 1.5s both; }
     .lockup .wm { animation: grain .5s steps(4) infinite; }
     .phone { animation: phone-in 1.1s cubic-bezier(.2, .8, .2, 1) 2.1s both; }
-    .unlock, .credit, .turn-hint { animation: fade 0.8s ease 3.3s both; }
-    .hint { animation: sweep 2.6s linear infinite; }
+    .credit, .turn-hint { animation: fade 0.8s ease 3.3s both; }
+    .hint { animation: sweep 2.4s linear infinite; }
   }
   @keyframes appear { from { opacity: 0; filter: blur(12px); translate: -50% -50%; scale: 1; } to { opacity: 1; filter: blur(0); translate: -50% -50%; scale: 1; } }
   @keyframes rise { from { translate: -50% -50%; scale: 1; } to { translate: -50% calc(-50% - 40svh); scale: var(--end-scale); } }
@@ -321,9 +273,13 @@ const place = (d: number) => d === 0
     const behind = [...document.querySelectorAll<HTMLElement>('.device, .screen')];
     behind.forEach(el => { el.inert = true; });
 
-    // The status bar shows the real time.
+    // The lock screen shows the real time and date (as iOS 4 did: 3:53, "domingo, 18 de octubre").
     const clock = $('.clock');
-    const showTime = () => { const d = new Date(); clock.textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`; };
+    const showTime = () => {
+      const d = new Date();
+      clock.textContent = `${d.getHours() % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')}`;
+      $('.date').textContent = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+    };
     showTime();
     const clockTimer = setInterval(showTime, 15000);
 
@@ -334,25 +290,12 @@ const place = (d: number) => d === 0
     // The player.
     const rows = [...intro.querySelectorAll<HTMLButtonElement>('[data-track]')];
     let current = -1, audio: AudioContext | null = null;
-    const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
-    let total = 0, known = 0;
-    rows.forEach(row => {                                      // durations, from the files' headers only
-      const probe = new Audio();
-      probe.preload = 'metadata';
-      probe.src = row.dataset.src!;
-      probe.addEventListener('loadedmetadata', () => {
-        row.querySelector('.d')!.textContent = fmt(probe.duration);
-        total += probe.duration;
-        if (++known === rows.length) $('.sum').textContent = `${rows.length} canciones, ${Math.round(total / 60)} min`;
-      }, { once: true });
-    });
 
     const show = (i: number) => {
       const row = rows[i];
       $<HTMLImageElement>('.art').src = row.dataset.cover!;
       $('.title').textContent = row.dataset.title!;
-      $('.year').textContent = `Sencillo · ${row.dataset.year || ''}`;
       rows.forEach((r, k) => r.classList.toggle('current', k === i));
     };
 
@@ -374,9 +317,8 @@ const place = (d: number) => d === 0
       player.play().catch(() => {});
     };
 
-    rows.forEach((row, i) => row.addEventListener('click', () => {
-      if (i === current && !player.paused) player.pause(); else play(i);
-    }));
+    $('.prev').addEventListener('click', () => play(((current < 0 ? 0 : current) - 1 + rows.length) % rows.length));
+    $('.next').addEventListener('click', () => play(((current < 0 ? 0 : current) + 1) % rows.length));
     $('.pp').addEventListener('click', () => {
       if (current < 0) play(0); else if (player.paused) play(current); else player.pause();
     });
@@ -401,7 +343,7 @@ const place = (d: number) => d === 0
       player.play().catch(() => {});
     }, still ? 0 : 2400);
     const firstTouch = (e: Event) => {
-      if (!player.paused || (e.target as Element).closest('[data-track], .pp')) return;
+      if (!player.paused || (e.target as Element).closest('.transport')) return;
       play(current < 0 ? 0 : current);
     };
     intro.addEventListener('pointerdown', firstTouch, { capture: true, once: true });
@@ -418,6 +360,8 @@ const place = (d: number) => d === 0
       root.removeAttribute('data-intro'); phones.stop(); clearInterval(clockTimer);
       behind.forEach(el => { el.inert = false; });
       setTimeout(() => root.classList.remove('arriving'), 1400);
+      // Unlocked: the home screen, as on the iPhone.
+      setTimeout(() => document.dispatchEvent(new CustomEvent('yeyo:home')), 120);
     };
     const enter = async () => {
       if (gone) return;
@@ -451,7 +395,8 @@ const place = (d: number) => d === 0
 
     // The slider: drag the knob most of the way and let go, or just press it (or Enter on it).
     const unlock = $('.unlock'), knob = $<HTMLButtonElement>('.knob');
-    const travel = () => unlock.clientWidth - knob.offsetWidth - 8;
+    const travel = () => unlock.offsetWidth - knob.offsetWidth - 2;
+    const scale = () => unlock.getBoundingClientRect().width / unlock.offsetWidth;   // the screen's scale
     const setX = (x: number) => {
       unlock.style.setProperty('--x', `${x}px`);
       unlock.style.setProperty('--p', String(x / travel()));
@@ -465,7 +410,7 @@ const place = (d: number) => d === 0
     });
     knob.addEventListener('pointermove', e => {
       if (!slide) return;
-      const dx = e.clientX - slide.from;
+      const dx = (e.clientX - slide.from) / scale();
       if (Math.abs(dx) > 3) slide.moved = true;
       setX(Math.max(0, Math.min(travel(), dx)));
     });
