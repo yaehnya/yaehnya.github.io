@@ -17,6 +17,7 @@ import { position } from './player';
 import { onPage } from './page';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const touch = matchMedia('(pointer: coarse)');
 const upright = matchMedia('(orientation: portrait), (pointer: coarse) and (max-height: 600px)');
 
 /** The screen's zoom: the photo's screen width over the display's width in points. */
@@ -31,7 +32,7 @@ export const scroller = () => document.getElementById('scroller');
 export let lenis: Lenis | null = null;
 onPage(signal => {
   const wrapper = scroller(), content = document.getElementById('world');
-  if (still || !wrapper || !content) return;
+  if (still || touch.matches || !wrapper || !content) return;      // a finger already glides
   lenis = new Lenis({ wrapper, content, autoRaf: true, lerp: .12 });
   signal.addEventListener('abort', () => { lenis?.destroy(); lenis = null; });
 });

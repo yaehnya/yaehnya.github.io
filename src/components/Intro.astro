@@ -20,6 +20,7 @@ const mini = flow.map((c, i) => ({ ...c, d: i - start })).filter(c => Math.abs(c
 const place = (d: number) => d === 0
   ? 'translateZ(12px)'
   : `translateX(${Math.sign(d) * (88 + Math.abs(d) * 26)}px) translateZ(-70px) rotateY(${-Math.sign(d) * 70}deg)`;
+import { srcset, sized } from '../data/images';
 ---
 
 <section class="intro" aria-label={`${site.name}, intro`}>
@@ -28,12 +29,12 @@ const place = (d: number) => d === 0
   <div class="phone" role="group" aria-label="iPhone con la música de Yeyo">
     <div class="case">
       <!-- The phone itself is the one in the reference photo, cleaned up (see tools/photo_assets.py). -->
-      <img class="photo" src="/fotos/iphone.webp" alt="" width="498" height="926" fetchpriority="high" />
+      <img class="photo" src="/fotos/iphone-750.webp" srcset={srcset('/fotos/iphone.webp')} sizes="(orientation: portrait) 62vw, 38vh" alt="" width="498" height="926" fetchpriority="high" />
         <div class="lcd">
           <!-- iOS 4's lock screen with a song playing, in Apple's own artwork: the cover as the wallpaper,
                the time and date on the glass bar, the controls under it, and "desliza para desbloquear". -->
           <div class="ios lock">
-            <img class="art" src={first?.image} alt="" width="320" height="320" />
+            <img class="art" src={first && sized(first.image, 640)} srcset={first && srcset(first.image)} sizes="420px" alt="" width="320" height="320" />
             <div class="status">
               <span class="carrier"><span class="bars"><i></i><i></i><i></i><i></i><i></i></span> Telcel</span>
               <svg class="padlock" viewBox="0 0 10 13" aria-hidden="true"><path d="M2.2 5.5V4a2.8 2.8 0 0 1 5.6 0v1.5" fill="none" stroke="#fff" stroke-width="1.4" /><rect x=".5" y="5.5" width="9" height="7" rx="1.2" fill="#fff" /></svg>
@@ -59,14 +60,14 @@ const place = (d: number) => d === 0
             </div>
             <ol class="tracks" hidden>
               {songs.map((s, i) => (
-                <li><button type="button" data-track={i} data-src={s.audio} data-title={s.title} data-cover={s.image}>{s.title}</button></li>
+                <li><button type="button" data-track={i} data-src={s.audio} data-title={s.title} data-cover={sized(s.image, 640)}>{s.title}</button></li>
               ))}
             </ol>
           </div>
           <div class="flow-mini" aria-hidden="true">
             {mini.map(c => (
               <span class="mc" style={`transform: ${place(c.d)}; z-index: ${10 - Math.abs(c.d)}`}>
-                <img src={c.image} alt="" width="150" height="150" loading="lazy" />
+                <img src={sized(c.image, 320)} alt="" width="150" height="150" loading="lazy" />
               </span>
             ))}
             <p class="mcap"><b>{flow[start]?.title}</b><span>{flow[start]?.subtitle}</span></p>
@@ -120,6 +121,7 @@ const place = (d: number) => d === 0
     display: block; width: 100%; height: 100%;
     filter: drop-shadow(0 22px 26px rgba(70, 52, 30, .2)) drop-shadow(0 4px 5px rgba(50, 38, 20, .2));
   }
+  @media (pointer: coarse) { .photo { filter: drop-shadow(0 10px 14px rgba(70, 52, 30, .18)); } }
   /* Where the photo's screen is, measured on the straightened photo. */
   .lcd { position: absolute; left: 9.639%; top: 17.495%; width: 80.723%; height: 65.011%; overflow: hidden; background: #000; }
   /* The glass over the display: the reflections, smudges and dust of a real iPhone 4's glass
@@ -233,17 +235,17 @@ const place = (d: number) => d === 0
   /* On a phone: the phone a little smaller and higher, the slider across the foot, the credit on top. */
   @media (max-width: 760px) {
     .phone { --h: min(58svh, 165vw); top: 51svh; }
-    .credit { top: 8px; bottom: auto; left: 16px; right: 16px; max-width: none; text-align: center; font-size: 9.5px; }
+    .credit { top: 8px; bottom: auto; left: 16px; right: 16px; max-width: none; text-align: center; font-size: 12px; }
   }
   @media (pointer: coarse) and (orientation: portrait) {
-    .turn-hint { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 3; display: block; margin: 0; text-align: center; color: var(--muted); font-size: 10px; }
+    .turn-hint { position: absolute; left: 0; right: 0; bottom: 12px; z-index: 3; display: block; margin: 0; text-align: center; color: var(--muted); font-size: 12px; }
   }
 
   @media (prefers-reduced-motion: no-preference) {
-    .lockup { animation: appear 1.2s ease both, rise 1.1s cubic-bezier(.65, 0, .25, 1) 1.5s both; }
+    .lockup { animation: appear .9s ease both, rise 1s cubic-bezier(.65, 0, .25, 1) 1s both; }
     .lockup .wm { animation: grain .5s steps(4) infinite; }
-    .phone { animation: phone-in 1.1s cubic-bezier(.2, .8, .2, 1) 2.1s both; }
-    .credit, .turn-hint { animation: fade 0.8s ease 3.3s both; }
+    .phone { animation: phone-in 1s cubic-bezier(.2, .8, .2, 1) 1.4s both; }
+    .credit, .turn-hint { animation: fade 0.8s ease 2.4s both; }
     .hint { animation: sweep 2.4s linear infinite; }
   }
   @keyframes appear { from { opacity: 0; filter: blur(12px); translate: -50% -50%; scale: 1; } to { opacity: 1; filter: blur(0); translate: -50% -50%; scale: 1; } }
@@ -294,7 +296,9 @@ const place = (d: number) => d === 0
 
     const show = (i: number) => {
       const row = rows[i];
-      $<HTMLImageElement>('.art').src = row.dataset.cover!;
+      const art = $<HTMLImageElement>('.art');
+      art.removeAttribute('srcset');               // the first song's sizes would win over the new src
+      art.src = row.dataset.cover!;
       $('.title').textContent = row.dataset.title!;
       rows.forEach((r, k) => r.classList.toggle('current', k === i));
     };
@@ -332,7 +336,7 @@ const place = (d: number) => d === 0
 
     // The EarPods arrive once the phone is up.
     const phones = new Earphones($<HTMLCanvasElement>('.cables'), $('.case'), intro, { pieces: '/fotos/', ignore: '.unlock' });
-    setTimeout(() => phones.start(!still), still ? 0 : 2300);
+    setTimeout(() => phones.start(!still), still ? 0 : 1600);
 
     // The first song starts by itself as the phone comes up. Browsers only allow sound after a touch,
     // so if it is held back, it starts with the first touch anywhere (unless that touch picks a song).
@@ -341,7 +345,7 @@ const place = (d: number) => d === 0
       if (current >= 0) return;
       current = 0; load(rows[0].dataset.src!, rows[0].dataset.title!); show(0);
       player.play().catch(() => {});
-    }, still ? 0 : 2400);
+    }, still ? 0 : 1700);
     const firstTouch = (e: Event) => {
       if (!player.paused || (e.target as Element).closest('.transport')) return;
       play(current < 0 ? 0 : current);

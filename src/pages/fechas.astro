@@ -15,11 +15,12 @@ const short = (iso: string) => { const [, m, d] = iso.split('-'); return `${+d}/
 const { tour } = site;
 const artist = site.name.charAt(0) + site.name.slice(1).toLowerCase();
 const maps = (q: string) => `https://maps.google.com/?q=${encodeURIComponent(q)}`;
+import { srcset, sized } from '../data/images';
 ---
 
 <Base title="Fechas" page="fechas" bar="translucido">
   <main class="poster">
-    <img class="art" src={tour.image} alt={tour.alt} width={tour.width} height={tour.height} fetchpriority="high" />
+    <img class="art" src={tour.image} srcset={srcset(tour.image)} sizes="(orientation: portrait) 480px, 825px" alt={tour.alt} width={tour.width} height={tour.height} fetchpriority="high" />
     <div class="board">
       <h1 class="title"><span class="stretch">{site.name}</span></h1>
       <p class="sub">{tour.subtitle}</p>

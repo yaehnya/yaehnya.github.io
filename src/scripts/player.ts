@@ -4,11 +4,12 @@
 // starts (unless it repeats); shuffle picks the next at random. The phone's lock screen and headphones
 // get the controls too (Media Session).
 import { site } from '../data/site';
+import { sized } from '../data/images';
 
 export interface Track { src: string; title: string; cover?: string }
 
 /** The songs that can be played, newest first. */
-export const library: Track[] = site.songs.filter(s => s.audio).map(s => ({ src: s.audio!, title: s.title, cover: s.image }));
+export const library: Track[] = site.songs.filter(s => s.audio).map(s => ({ src: s.audio!, title: s.title, cover: sized(s.image, 640) }));
 
 export const player = new Audio();
 player.preload = 'none';
@@ -56,7 +57,7 @@ function mediaSession() {
   if (!('mediaSession' in navigator) || !track) return;
   navigator.mediaSession.metadata = new MediaMetadata({
     title: track.title, artist: 'Yeyo', album: 'Sencillo',
-    artwork: track.cover ? [{ src: track.cover, sizes: '1000x1000', type: 'image/webp' }] : [],
+    artwork: track.cover ? [{ src: track.cover, sizes: '640x640', type: 'image/webp' }] : [],
   });
 }
 if ('mediaSession' in navigator) {

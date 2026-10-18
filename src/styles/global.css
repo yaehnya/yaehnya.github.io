@@ -2,9 +2,10 @@
 @import '@fontsource-variable/cinzel';
 
 /* Helvetica Neue, the iPhone's type (iOS 4 used it everywhere: status bar, bars, lists, Cover Flow).
-   The computer's own where it has it (Mac); elsewhere the copy here (Latin only, public/fonts/). */
-@font-face { font-family: 'Helvetica Neue'; font-weight: 400; font-display: swap; src: local('Helvetica Neue'), local('HelveticaNeue'), url('/fonts/helvetica-neue-regular.woff2') format('woff2'); }
-@font-face { font-family: 'Helvetica Neue'; font-weight: 700; font-display: swap; src: local('Helvetica Neue Bold'), local('HelveticaNeue-Bold'), url('/fonts/helvetica-neue-bold.woff2') format('woff2'); }
+   The computer's own where it has it (Mac); elsewhere the copy here (Latin only, public/fonts/, 29 KB,
+   preloaded). The text waits for it rather than showing in another face and jumping when it comes. */
+@font-face { font-family: 'Helvetica Neue'; font-weight: 400; font-display: block; src: local('Helvetica Neue'), local('HelveticaNeue'), url('/fonts/helvetica-neue-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Helvetica Neue'; font-weight: 700; font-display: block; src: local('Helvetica Neue Bold'), local('HelveticaNeue-Bold'), url('/fonts/helvetica-neue-bold.woff2') format('woff2'); }
 
 :root {
   --bg: #ffffff;
@@ -107,6 +108,9 @@ body[data-bar='translucido'] .scroller { top: 0; }
   inset: 0; mix-blend-mode: screen;
   background: linear-gradient(112deg, transparent 0 calc(30% + var(--gx, 0) * 12%), rgba(255, 255, 255, .1) calc(36% + var(--gx, 0) * 12%), rgba(255, 255, 255, .03) calc(52% + var(--gx, 0) * 12%), transparent calc(53% + var(--gx, 0) * 12%));
 }
+
+/* On phones the photo's shadow is left out: a blurred shadow that big costs a phone too much. */
+@media (pointer: coarse) { .bezel { filter: none; } .screen::before { display: none; } }   /* and the blended glass: scrolling stays light */
 
 /* While the intro is up, the iPhone of the intro is the one on screen. */
 html[data-intro]:not(.arriving) .device, html[data-intro]:not(.arriving) .screen { visibility: hidden; }

@@ -25,6 +25,7 @@ interface Props {
 
 const { title, description = site.description, page, bar = 'gris', image } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
+import { srcset } from '../data/images';
 ---
 
 <!doctype html>
@@ -42,7 +43,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
   </head>
   <body data-bar={bar} data-page={page}>
     <div class="device" transition:persist="device">
-      <img class="bezel" src="/fotos/iphone.webp" alt="" width="498" height="926" />
+      <img class="bezel" src="/fotos/iphone-750.webp" srcset={srcset('/fotos/iphone.webp')} sizes="(orientation: portrait) 92vw, 55vh" alt="" width="498" height="926" />
       <HomeButton />
       <SideSwitch />
     </div>

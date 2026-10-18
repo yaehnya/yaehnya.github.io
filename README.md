@@ -37,6 +37,27 @@ compilado a tu cuenta: `npx netlify-cli login` y luego `npx netlify-cli deploy -
   envío de un mensaje, el ding de uno que llega y el tic del Cover Flow. Están hechos con Web Audio (no
   son grabaciones), suenan bajito y solo después de que el visitante tocó algo. En Android también vibra.
 
+## Novedades del iPhone (2026-10-18)
+
+- **Todo dentro del iPhone:** el sitio vive en la pantalla del iPhone de la foto (de lado en ventanas
+  anchas, de pie en ventanas altas y siempre de pie en teléfonos). La pantalla mide 480 × 320 puntos
+  como la del iPhone 4 y se escala; el botón de inicio y el interruptor de silencio son los de la foto.
+- **Originales de Apple:** íconos, gráficos de UIKit y sonidos de iOS (`public/ios/`), la Helvetica
+  Neue (`public/fonts/`), y los íconos de la época de Spotify (2010), YouTube (iOS) e Instagram
+  (2011–2016). Fuentes en `tools/fuentes/ios/`.
+- **Intro:** la pantalla de bloqueo de iOS 4 (hora, fecha, controles de la música, «desliza para
+  desbloquear»). Al desbloquear, el iPhone gira, queda en el marco y abre el springboard.
+- **El iPhone vivo:** se inclina hacia el puntero (o con el giroscopio), cristal y brillo sobre la
+  pantalla, gira al cambiar la ventana de forma (`src/scripts/device.ts`).
+- **Botón de inicio:** un toque, el springboard; dos, la barra de multitarea con los controles del
+  iPod (`Switcher.astro`). Tecla H. La primera visita, un globo lo señala.
+- **Interruptor de silencio** (`SideSwitch.astro`): silencia todo y muestra la campana de iOS. Tecla M.
+- **Juego:** la sección de 2026 de la Wikipedia sale tachada en negro salvo el párrafo del regreso
+  (`src/data/wikipedia.ts`).
+- **Imágenes por tamaño** (`src/data/images.ts`): cada foto grande tiene copias chicas para teléfonos.
+- **Lighthouse** (versión compilada): computadora 97–100 en todo; teléfono: rendimiento 82–99,
+  accesibilidad, buenas prácticas y SEO 100.
+
 ## Páginas
 
 | Ruta        | Qué es |

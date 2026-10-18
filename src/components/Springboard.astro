@@ -34,13 +34,14 @@ const dock = [
 const now = new Date();
 const weekday = now.toLocaleDateString('es-MX', { weekday: 'long' });
 // While a song plays, its cover is the wallpaper.
-const covers = Object.fromEntries(site.songs.filter(s => s.audio).map(s => [s.audio, s.image]));
+const covers = Object.fromEntries(site.songs.filter(s => s.audio).map(s => [s.audio, sized(s.image, 640)]));
+import { srcset, sized } from '../data/images';
 ---
 
 <div id="springboard" class="springboard" role="dialog" aria-modal="true" aria-label="Inicio: las apps" hidden
-  data-lenis-prevent data-wall={site.wallpaper.src} data-covers={JSON.stringify(covers)}>
+  data-lenis-prevent data-wall={sized(site.wallpaper.src, 640)} data-covers={JSON.stringify(covers)}>
   <div class="bg" aria-hidden="true">
-    <img class="wall" src={site.wallpaper.src} alt="" width="1000" height="1000" loading="lazy" decoding="async" />
+    <img class="wall" src={sized(site.wallpaper.src, 640)} alt="" width="1000" height="1000" loading="lazy" decoding="async" />
   </div>
 
   <div class="layer">

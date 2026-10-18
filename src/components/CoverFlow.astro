@@ -13,6 +13,7 @@ const items = site.coverflow;
 const start = Math.max(0, items.findIndex(c => 'start' in c && c.start));
 const kinds = { foto: 'Foto', cancion: 'Sencillo', noticia: 'Noticia' };
 const year = (iso?: string) => iso?.slice(0, 4);
+import { srcset, sized } from '../data/images';
 ---
 
 <section class="coverflow" aria-label="Fotos, música y noticias">
@@ -26,8 +27,8 @@ const year = (iso?: string) => iso?.slice(0, 4);
             <div class="cover" data-kind={c.kind}>
               <div class="card">
                 <button class="front" type="button" aria-label={`${c.title}: dar la vuelta`} aria-expanded="false" draggable="false">
-                  <img class="art" src={c.image} alt={c.alt} width="600" height="600" loading={near ? 'eager' : 'lazy'} draggable="false" />
-                  <img class="reflection" src={c.image} alt="" aria-hidden="true" width="600" height="600" loading={near ? 'eager' : 'lazy'} draggable="false" />
+                  <img class="art" src={sized(c.image, 640)} srcset={srcset(c.image)} sizes="(orientation: portrait) 200px, 280px" alt={c.alt} width="600" height="600" loading={near ? 'eager' : 'lazy'} draggable="false" />
+                  <img class="reflection" src={sized(c.image, 640)} srcset={srcset(c.image)} sizes="(orientation: portrait) 200px, 280px" alt="" aria-hidden="true" width="600" height="600" loading={near ? 'eager' : 'lazy'} draggable="false" />
                 </button>
                 <div class="back" inert>
                   <p class="kind">{kinds[c.kind]}{song?.date && ` · ${year(song.date)}`}</p>

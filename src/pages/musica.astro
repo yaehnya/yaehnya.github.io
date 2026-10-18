@@ -15,6 +15,7 @@ const year = (iso?: string) => iso?.slice(0, 4) ?? '';
 // Which cover shows, from data-index on the iPod (set before the page is shown; see transitions.ts).
 const pick = songs.map((_, i) => `.ipod[data-index="${i}"] .art:nth-child(${i + 1}){translate:0 0;visibility:visible}`).join('')
   + '.ipod:not([data-index]) .art:first-child{translate:0 0;visibility:visible}';
+import { srcset, sized } from '../data/images';
 ---
 
 <Base title="Música" page="musica" bar="negro" description={`Escucha a ${site.name}: ${songs.map(s => `«${s.title}»`).join(' y ')}.`}>
@@ -31,7 +32,7 @@ const pick = songs.map((_, i) => `.ipod[data-index="${i}"] .art:nth-child(${i + 
       </p>
       <button class="flip-btn" type="button" aria-pressed="false" aria-label="Ver la lista de canciones">
         <svg class="list-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11" /></svg>
-        <img class="thumb" src={songs[0]?.image} alt="" width="30" height="30" />
+        <img class="thumb" src={songs[0] && sized(songs[0].image, 320)} alt="" width="30" height="30" />
       </button>
     </header>
 
@@ -40,7 +41,7 @@ const pick = songs.map((_, i) => `.ipod[data-index="${i}"] .art:nth-child(${i + 
         <div class="front">
           <div class="arts">
             {songs.map((s, i) => (
-              <img class="art" src={s.image} alt={`Portada de ${s.title}`} width={s.width} height={s.height}
+              <img class="art" src={sized(s.image, 640)} srcset={srcset(s.image)} sizes="560px" alt={`Portada de ${s.title}`} width={s.width} height={s.height}
                 data-vt={`portada-${i + 1}`} draggable="false" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
             ))}
           </div>
