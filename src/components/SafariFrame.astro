@@ -1,0 +1,85 @@
+---
+// The game's page is Yeyo's Wikipedia article, so it is seen as the iPhone 4 saw the web: in iOS 4's
+// Safari. The status bar, Safari's bar on top (the page's title, the address, the search field) and its
+// toolbar at the foot (back, forward, add, bookmarks, pages). The page's own content is left alone;
+// this only sits over its edges and leaves it room.
+interface Props { title: string; url: string }
+const { title, url } = Astro.props;
+const shown = decodeURI(url.replace(/^https?:\/\//, ''));
+---
+
+<div class="safari">
+  <div class="sf-status" aria-hidden="true"><span class="sf-carrier"><span class="sf-bars"><i></i><i></i><i></i><i></i><i></i></span>Telcel</span><b class="sf-clock"></b><span>100 %</span></div>
+  <header class="sf-top">
+    <p class="sf-title">{title}</p>
+    <div class="sf-fields">
+      <a class="sf-url" href={url} title="Abrir en Wikipedia"><span>{shown}</span>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.1-5M19 4v4.5h-4.5" /></svg>
+      </a>
+      <span class="sf-search" aria-hidden="true">Google</span>
+    </div>
+  </header>
+  <nav class="sf-tools" aria-label="Safari">
+    <button type="button" data-sf="back" aria-label="Atrás"><svg viewBox="0 0 24 24"><path d="M16 4 7 12l9 8z" /></svg></button>
+    <button type="button" data-sf="forward" aria-label="Adelante"><svg viewBox="0 0 24 24"><path d="m8 4 9 8-9 8z" /></svg></button>
+    <a href={url} aria-label="Abrir el artículo en Wikipedia"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg></a>
+    <a href="/" aria-label="Volver al sitio"><svg viewBox="0 0 24 24"><path d="M5 4h6a3 3 0 0 1 1 .2V20a3 3 0 0 0-1-.2H5zM19 4h-6a3 3 0 0 0-1 .2V20a3 3 0 0 1 1-.2h6z" /></svg></a>
+    <a href="/" aria-label="Páginas: volver al sitio"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="12" height="13" rx="1.5" /><path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4h9A1.5 1.5 0 0 1 20 5.5v10a1.5 1.5 0 0 1-1.5 1.5H16" /></svg></a>
+  </nav>
+</div>
+
+<style is:global>
+  /* Room for Safari around the article. */
+  body { padding-top: 84px !important; padding-bottom: 44px !important; }
+  html.bw-on .safari .sf-tools { display: none; }
+</style>
+
+<style>
+  .safari { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: 0; text-transform: none; }
+  .sf-status, .sf-top, .sf-tools { position: fixed; left: 0; right: 0; z-index: 95; }
+  .sf-status {
+    top: 0; display: flex; justify-content: space-between; align-items: center; height: 20px; padding: 0 6px;
+    background: linear-gradient(#ececec, #c6c6c6); box-shadow: inset 0 -1px 0 #8d8d8d; color: #111; font-size: 12px; font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+  }
+  .sf-carrier { display: flex; align-items: center; gap: 4px; }
+  .sf-bars { display: flex; align-items: end; gap: 1px; height: 11px; }
+  .sf-bars i { width: 3px; background: currentColor; }
+  .sf-bars i:nth-child(1) { height: 4px; } .sf-bars i:nth-child(2) { height: 5.5px; } .sf-bars i:nth-child(3) { height: 7px; }
+  .sf-bars i:nth-child(4) { height: 8.5px; } .sf-bars i:nth-child(5) { height: 10px; opacity: .35; }
+  .sf-top {
+    top: 20px; height: 64px; padding: 2px 6px 6px; border-bottom: 1px solid #2d3642;
+    background: linear-gradient(#b0bccd, #889bb3 50%, #8195af 51%, #6d84a2);
+  }
+  .sf-title { margin: 0 0 3px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; text-align: center; color: #fff; font-size: 13px; font-weight: 700; text-shadow: 0 -1px 0 rgba(0, 0, 0, .45); }
+  .sf-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(70px, 28%); gap: 6px; }
+  .sf-url, .sf-search {
+    display: flex; align-items: center; height: 31px; padding: 0 9px; border: 1px solid #4b5a71; background: #fff; color: #333;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, .35); font-size: 14px;
+  }
+  .sf-url { justify-content: space-between; gap: 6px; border-radius: 6px; text-decoration: none; }
+  .sf-url span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .sf-url svg { flex: none; width: 16px; height: 16px; fill: none; stroke: #666; stroke-width: 2.4; stroke-linecap: round; }
+  .sf-search { border-radius: 16px; color: #999; }
+  .sf-tools {
+    bottom: 0; display: flex; justify-content: space-around; align-items: center; height: 44px;
+    border-top: 1px solid #2d3642; background: linear-gradient(#b0bccd, #889bb3 50%, #8195af 51%, #6d84a2);
+  }
+  .sf-tools button, .sf-tools a { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; background: none; color: #fff; cursor: pointer; }
+  .sf-tools svg { width: 22px; height: 22px; fill: #fff; stroke: #fff; stroke-width: 1.2; stroke-linejoin: round; filter: drop-shadow(0 -1px 0 rgba(0, 0, 0, .45)); }
+  .sf-tools a:nth-child(3) svg { fill: none; stroke-width: 3; stroke-linecap: round; }
+  .sf-tools a:nth-child(4) svg, .sf-tools a:nth-child(5) svg { fill: none; stroke-width: 2; }
+  .sf-tools :focus-visible { outline: 2px solid #fff; outline-offset: -4px; }
+</style>
+
+<script>
+  const clock = document.querySelector('.sf-clock');
+  const tick = () => {
+    const d = new Date(), h = d.getHours();
+    if (clock) clock.textContent = `${h % 12 || 12}:${String(d.getMinutes()).padStart(2, '0')} ${h < 12 ? 'a.m.' : 'p.m.'}`;
+  };
+  tick();
+  setInterval(tick, 15_000);
+  document.querySelector('[data-sf="back"]')?.addEventListener('click', () => history.back());
+  document.querySelector('[data-sf="forward"]')?.addEventListener('click', () => history.forward());
+</script>

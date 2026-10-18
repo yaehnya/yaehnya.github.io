@@ -1,7 +1,8 @@
 ---
 // The iPhone 4's home button, at the foot of every page: a white concave button with its rounded
 // square. A press opens the springboard, the iPhone's home screen with the site's apps (Springboard
-// .astro); pressed again, it goes back to the page. It clicks (quietly) and, on Android, buzzes.
+// .astro); pressed again, it goes back to the page. It clicks (quietly) and, on Android, buzzes. On the
+// game's page, which is Wikipedia's and has no springboard, it goes back to the site.
 ---
 
 <button class="home-btn" type="button" transition:persist="home-button" aria-label="Botón de inicio: ver las apps" aria-expanded="false" aria-controls="springboard">
@@ -33,7 +34,7 @@
       0 5px 12px rgba(0, 0, 0, .14);
   }
   .home-btn:focus-visible { outline: 2px solid #3a76d8; outline-offset: 5px; }
-  :global(html[data-intro]) .home-btn { display: none; }
+  :global(html[data-intro]) .home-btn, :global(html.bw-on) .home-btn { display: none; }
   @media (prefers-reduced-motion: no-preference) {
     :global(html.arriving) .home-btn { animation: home-in .7s .35s var(--ease-entrada) both; }
   }
@@ -48,6 +49,7 @@
   btn.addEventListener('click', () => {
     click();
     vibrate(10);
+    if (!document.getElementById('springboard')) { location.assign('/'); return; }
     document.dispatchEvent(new CustomEvent('yeyo:home'));
   });
 </script>

@@ -5,6 +5,8 @@
 import '@fontsource-variable/inter-tight';
 import Bolaweb from '../components/Bolaweb.astro';
 import GlassBall from '../components/GlassBall.astro';
+import SafariFrame from '../components/SafariFrame.astro';
+import HomeButton from '../components/HomeButton.astro';
 import Meta from '../components/Meta.astro';
 import { site } from '../data/site';
 import { fetchPage } from '../data/wikipedia';
@@ -30,6 +32,9 @@ const articleUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(titl
       ? <div id="world" set:html={page.body} />
       : <div id="world"><p class="missing">No se pudo cargar la página. <a href={articleUrl}>Ábrela en Wikipedia</a>.</p></div>}
 
+    <SafariFrame title={page?.title ?? title} url={articleUrl} />
+    <HomeButton />
+
     <button class="play" type="button" data-bolaweb>
       <GlassBall size={38} id="play-ball" /><span>Jugar</span>
     </button>
@@ -50,12 +55,15 @@ const articleUrl = `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(titl
   #bw .wordmark .wm { display: inline-block; scale: var(--stretch); }
   #bw .label { font: 400 11px/1.4 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
   html.bw-on .play { display: none; }
+  /* What the iPhone parts (the home button) expect from the site's stylesheet. */
+  :root { --sbh: 20px; --dur-micro: 160ms; --ease-entrada: cubic-bezier(.16, 1, .3, 1); }
+  .home-btn { bottom: 56px !important; }   /* above Safari's toolbar */
   #world { background: #fff; }
 </style>
 
 <style>
   .play {
-    position: fixed; right: 22px; bottom: 22px; z-index: 90; display: inline-flex; align-items: center; gap: 10px;
+    position: fixed; right: 18px; bottom: 60px; z-index: 96; display: inline-flex; align-items: center; gap: 10px;
     padding: 7px 20px 7px 8px; border: 0; border-radius: 999px; background: #0b0b0b; color: #fff; cursor: pointer;
     font: 700 13px/1 'Helvetica Neue', 'Inter Tight Variable', Helvetica, Arial, sans-serif; letter-spacing: .14em; text-transform: uppercase;
     box-shadow: 0 10px 30px rgba(0, 0, 0, .25); transition: scale .35s linear(0, .08 4%, .32 12%, .62 22%, .88 33%, 1.03 43%, 1.055 49%, 1.04 56%, 1.005 66%, .99 74%, .998 86%, 1);
