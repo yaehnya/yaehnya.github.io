@@ -63,7 +63,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <script is:inline>
       (function () {
         var s = document.getElementById('screen'), d = document.getElementById('display');
-        d.style.zoom = String(s.clientWidth / (matchMedia('(orientation: portrait)').matches ? 320 : 480));
+        d.style.zoom = String(s.clientWidth / (matchMedia('(orientation: portrait), (pointer: coarse) and (max-height: 600px)').matches ? 320 : 480));
       })();
     </script>
     <slot name="overlay" />

@@ -17,7 +17,7 @@ import { position } from './player';
 import { onPage } from './page';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const upright = matchMedia('(orientation: portrait)');
+const upright = matchMedia('(orientation: portrait), (pointer: coarse) and (max-height: 600px)');
 
 /** The screen's zoom: the photo's screen width over the display's width in points. */
 export function fit() {

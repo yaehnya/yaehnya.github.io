@@ -16,7 +16,7 @@
     translate: -50% -50%; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  @media (orientation: portrait) {
+  @media (orientation: portrait), (pointer: coarse) and (max-height: 600px) {
     .home-btn { left: 50%; top: 91.4%; width: calc(var(--dw) * .18); height: calc(var(--dw) * .18); }
   }
   /* Pressed: the button goes in, its bowl in shadow. */

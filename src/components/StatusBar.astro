@@ -13,35 +13,40 @@
   <span class="sb-l" aria-hidden="true">
     <span class="bars"><i></i><i></i><i></i><i></i><i></i></span>
     <span class="carrier">Telcel</span>
-    <svg class="wifi" viewBox="0 0 16 12"><path d="M8 11.6 5.5 8.9a3.5 3.5 0 0 1 5 0z" /><path d="M3.4 6.6a6.6 6.6 0 0 1 9.2 0l-1.4 1.5a4.6 4.6 0 0 0-6.4 0z" /><path d="M1.2 4.3a9.8 9.8 0 0 1 13.6 0l-1.4 1.5a7.8 7.8 0 0 0-10.8 0z" /></svg>
+    <span class="wifi"></span>
   </span>
   <span class="sb-time" aria-hidden="true"></span>
   <span class="sb-r" aria-hidden="true">
     <svg class="sb-play" viewBox="0 0 10 10" hidden><path d="M2 1v8l7-4z" /></svg>
     <span class="pct">100%</span>
-    <svg class="bolt" viewBox="0 0 8 13" hidden><path d="M5.2 0 .4 7.2h3L2.6 13l5-7.4h-3z" /></svg>
     <span class="batt"><i></i></span>
   </span>
 </button>
 
 <style>
+  /* The colours are sampled from a real screenshot of the default grey bar of the time (iOS 5, the same
+     as iOS 4's): a cool grey gradient with a dark line under it, black type embossed with white, the
+     Wi-Fi fan in glossy blue, the signal bars and the battery's outline in dark slate, and the battery
+     filled glossy green while on power (glossy slate otherwise). On the black bars (the iPod, the
+     springboard) the glyphs are white. */
   .statusbar {
+    --glyph: linear-gradient(#5f6b85, #38435a 55%, #2a3245);   /* the slate of the bars and the battery */
+    --wifi: radial-gradient(circle at 50% 100%, #0936ba 0, #2750b8 35%, #5781bf 60%, #63b5e7 100%);
     position: absolute; top: 0; left: 0; right: 0; z-index: 170; display: grid; grid-template-columns: 1fr auto 1fr;
-    align-items: center; height: var(--sbh); margin: 0; padding: 0 5px; border: 0; cursor: default;
+    align-items: center; height: var(--sbh); margin: 0; padding: 0 4px 1px; border: 0; cursor: default;
     font: 700 12px/1 'Helvetica Neue', Helvetica, Arial, sans-serif; letter-spacing: 0; text-transform: none;
-    /* iOS 4's default bar: light grey, a darker line under it, black type embossed with white. */
-    color: #111; background: linear-gradient(#ececec, #c6c6c6); box-shadow: inset 0 -1px 0 #8d8d8d;
-    text-shadow: 0 1px 0 rgba(255, 255, 255, .6);
+    color: #000; background: linear-gradient(rgb(237, 245, 247), rgb(189, 197, 201)); box-shadow: inset 0 -1px 0 rgb(92, 99, 104);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, .55);
     view-transition-name: statusbar;
-    transition: background-color var(--dur-media), color var(--dur-media);
     -webkit-tap-highlight-color: transparent;
   }
-  :global(body[data-bar='negro']) .statusbar { color: #fff; background: #000; box-shadow: none; text-shadow: none; }
+  :global(body[data-bar='negro']) .statusbar,
   :global(body[data-bar='translucido']) .statusbar, :global(html.sb-open) .statusbar {
-    color: #fff; background: rgba(0, 0, 0, .42); box-shadow: none; text-shadow: 0 -1px 0 rgba(0, 0, 0, .35);
+    --glyph: linear-gradient(#fff, #e9e9e9); --wifi: linear-gradient(#fff, #e9e9e9);
+    color: #fff; background: #000; box-shadow: none; text-shadow: 0 -1px 0 rgba(0, 0, 0, .5);
   }
+  :global(body[data-bar='translucido']) .statusbar, :global(html.sb-open) .statusbar { background: rgba(0, 0, 0, .58); }
   :global(html[data-intro]) .statusbar { display: none; }
-  /* Arriving from the intro: the bar drops in, as it did when the iPhone woke. */
   @media (prefers-reduced-motion: no-preference) {
     :global(html.arriving) .statusbar { animation: sb-in .6s .25s var(--ease-entrada) both; }
   }
@@ -49,24 +54,26 @@
   .statusbar:focus-visible { outline: 2px solid #3a76d8; outline-offset: -2px; }
 
   .sb-l { display: flex; align-items: center; gap: 4px; }
-  .bars { display: flex; align-items: end; gap: 1px; height: 11px; }
-  .bars i { width: 3px; background: currentColor; border-radius: .5px; }
-  .bars i:nth-child(1) { height: 4px; } .bars i:nth-child(2) { height: 5.5px; } .bars i:nth-child(3) { height: 7px; }
-  .bars i:nth-child(4) { height: 8.5px; } .bars i:nth-child(5) { height: 10px; opacity: .35; }
-  .wifi { width: 15px; height: 11px; fill: currentColor; }
+  /* Five bars, rising; the ones without signal faint. */
+  .bars { display: flex; align-items: end; gap: 1px; height: 10px; }
+  .bars i { width: 3px; background: var(--glyph); }
+  .bars i:nth-child(1) { height: 3px; } .bars i:nth-child(2) { height: 5px; } .bars i:nth-child(3) { height: 7px; }
+  .bars i:nth-child(4) { height: 9px; } .bars i:nth-child(5) { height: 10px; opacity: .3; }
+  .wifi { width: 14px; height: 10px; background: var(--wifi); -webkit-mask: var(--fan) center / contain no-repeat; mask: var(--fan) center / contain no-repeat; }
+  .statusbar { --fan: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 12'%3E%3Cpath d='M8 11.6 5.5 8.9a3.5 3.5 0 0 1 5 0z'/%3E%3Cpath d='M3.4 6.6a6.6 6.6 0 0 1 9.2 0l-1.4 1.5a4.6 4.6 0 0 0-6.4 0z'/%3E%3Cpath d='M1.2 4.3a9.8 9.8 0 0 1 13.6 0l-1.4 1.5a7.8 7.8 0 0 0-10.8 0z'/%3E%3C/svg%3E"); }
   .sb-time { justify-self: center; }
-  .sb-r { display: flex; justify-content: end; align-items: center; gap: 5px; }
-  .sb-play { width: 9px; height: 9px; fill: currentColor; }
-  /* As iOS 4 drew it: the percentage close up against the battery; the battery a thin outline with its
-     nub, filled in the bar's own colour to the level, a faint gloss on top; charging, a bolt beside it. */
-  .sb-r { gap: 3px; }
-  .batt { position: relative; width: 23px; height: 11px; margin-right: 3px; border: 1px solid currentColor; border-radius: 2px; opacity: .95; }
-  .batt::after { content: ''; position: absolute; right: -3px; top: 2.5px; width: 2px; height: 4px; background: currentColor; border-radius: 0 1px 1px 0; }
+  .sb-r { display: flex; justify-content: end; align-items: center; gap: 3px; }
+  .sb-play { width: 8px; height: 9px; fill: currentColor; }
+  /* The battery: a slate outline (1 px) with its nub, the fill glossy (green on power). */
+  .batt { position: relative; width: 21px; height: 10px; margin: 0 3px 0 1px; border-radius: 2px; background: var(--glyph); padding: 1px; }
+  .batt::before { content: ''; position: absolute; inset: 1px; border-radius: 1px; background: var(--well, rgb(211, 220, 223)); }
+  :global(body[data-bar='negro']) .batt, :global(body[data-bar='translucido']) .batt, :global(html.sb-open) .batt { --well: #000; }
+  .batt::after { content: ''; position: absolute; right: -2px; top: 3px; width: 2px; height: 4px; background: var(--glyph); border-radius: 0 1px 1px 0; }
   .batt i {
-    position: absolute; left: 1px; top: 1px; bottom: 1px; width: calc((100% - 2px) * var(--level, 1)); border-radius: .5px;
-    background: linear-gradient(rgba(255, 255, 255, .35), rgba(255, 255, 255, 0) 50%), currentColor;
+    position: absolute; left: 2px; top: 2px; bottom: 2px; width: calc((100% - 4px) * var(--level, 1)); border-radius: .5px;
+    background: linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, .15) 45%, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, .15)), var(--glyph);
   }
-  .bolt { width: 7px; height: 11px; fill: currentColor; }
+  .batt.charging i { background: linear-gradient(rgb(179, 245, 128), rgb(197, 252, 141) 25%, rgb(97, 202, 41) 55%, rgb(55, 173, 12) 70%, rgb(41, 140, 8)); }
 </style>
 
 <script>
@@ -92,7 +99,7 @@
     const show = () => {
       pct.textContent = `${Math.round(b.level * 100)}%`;
       batt.style.setProperty('--level', String(b.level));
-      bar.querySelector('.bolt')!.toggleAttribute('hidden', !b.charging);
+      batt.classList.toggle('charging', b.charging);
     };
     show();
     b.addEventListener('levelchange', show);
