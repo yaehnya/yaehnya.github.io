@@ -1,0 +1,41 @@
+# Publica el sitio en GitHub Pages cada vez que se sube algo a la rama main.
+# GitHub compila el sitio (npm run build, que ya minifica HTML, CSS y JS) y publica la carpeta dist/.
+# La dirección pública es https://USUARIO.github.io (el repositorio debe llamarse USUARIO.github.io).
+# Con dominio propio: créalo en Settings > Pages y define la variable SITE_URL (Settings > Secrets and
+# variables > Actions > Variables) con https://tudominio.com.
+name: Publicar en GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: withastro/action@v3
+        with:
+          node-version: 22
+        env:
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

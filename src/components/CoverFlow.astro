@@ -49,7 +49,7 @@ import { srcset, sized } from '../data/images';
                     </p>
                   )}
                   {c.text && <p class="text">{c.text}</p>}
-                  {c.kind === 'foto' && <p class="text">{c.credit ?? '[PENDIENTE: lugar, fecha y crédito de la foto]'}</p>}
+                  {c.kind === 'foto' && c.credit && <p class="text">{c.credit}</p>}
                   {c.href && <a class="more" href={c.href}>{c.kind === 'cancion' ? 'Ver en Música' : c.kind === 'noticia' ? 'Ver las fechas' : 'Ver más'} →</a>}
                   <button class="turn" type="button" aria-label="Volver a la portada">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4.5h4.5" /></svg>

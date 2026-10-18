@@ -24,7 +24,7 @@ export interface Show {
   soldOut?: boolean;
 }
 
-// One cover in the home's Cover Flow: mostly photos, but also songs and news. `title` and `subtitle`
+// One cover in the home's Cover Flow (a photo's `credit`, when there is one, shows on its back): mostly photos, but also songs and news. `title` and `subtitle`
 // are the two lines under the cover in the middle, like album and artist on an iPod. A click on the
 // middle cover turns it over, as in iTunes, and its back says more: a song's back plays it (`song`:
 // its place in `songs`) and links to it, a news item's has its `text`, a photo's its credit; `href` is
@@ -87,7 +87,7 @@ export const site = {
     { kind: 'cancion', image: songs[0].image, alt: `Portada de ${songs[0].title}`, title: songs[0].title, subtitle: 'Yeyo', href: '/musica#cancion-1', song: 0, start: true },
     { kind: 'foto', image: '/fotos/collage-4.svg', alt: 'Yeyo', title: 'Yeyo', subtitle: 'Foto' },
     { kind: 'noticia', image: '/fotos/fechas.webp', alt: 'Guts, de Berserk', title: 'Tour 2026', subtitle: 'Noticia · las fechas', href: '/fechas',
-      text: 'Ciudad de México, Guadalajara y Monterrey. [PENDIENTE: fechas confirmadas]' },
+      text: 'Ciudad de México, Guadalajara y Monterrey.' },   // [PENDIENTE: fechas confirmadas]
     { kind: 'foto', image: '/fotos/collage-5.svg', alt: 'Yeyo', title: 'Yeyo', subtitle: 'Foto' },
     { kind: 'foto', image: '/fotos/collage-6.svg', alt: 'Yeyo', title: 'Yeyo', subtitle: 'Foto' },
   ] satisfies (Cover & { start?: boolean })[],
