@@ -16,10 +16,10 @@ const { page } = Astro.props;
 
 const apps: { id: string; icon: string; href: string; label: string; page?: Page; reload?: boolean; settings?: boolean }[] = [
   { id: 'coverflow', icon: 'fotos', href: '/', label: 'Fotos', page: 'home' },
-  { id: 'musica', icon: 'ipod', href: '/musica', label: 'iPod', page: 'musica' },
-  { id: 'fechas', icon: 'calendario', href: '/fechas', label: 'Calendario', page: 'fechas' },
-  { id: 'tienda', icon: 'app-store', href: '/tienda', label: 'App Store', page: 'tienda' },
-  { id: 'contacto', icon: 'mensajes', href: '/contacto', label: 'Mensajes', page: 'contacto' },
+  { id: 'musica', icon: 'ipod', href: '/musica', label: 'Música', page: 'musica' },
+  { id: 'fechas', icon: 'calendario', href: '/fechas', label: 'Fechas', page: 'fechas' },
+  { id: 'tienda', icon: 'app-store', href: '/tienda', label: 'Tienda', page: 'tienda' },
+  { id: 'contacto', icon: 'mensajes', href: '/contacto', label: 'Contacto', page: 'contacto' },
   { id: 'juego', icon: 'safari', href: '/juego', label: 'Safari', page: 'juego', reload: true },   // the game: Wikipedia, in Safari
   { id: 'ajustes', icon: 'ajustes', href: '#ajustes', label: 'Ajustes', settings: true },
 ];
