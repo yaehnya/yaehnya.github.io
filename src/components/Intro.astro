@@ -224,6 +224,7 @@ const place = (d: number) => d === 0
   .flow-mini {
     position: absolute; left: 50%; top: 50%; width: 480px; height: 320px; margin: -160px 0 0 -240px;
     transform: scale(var(--k, 1)) rotate(90deg); opacity: 0; overflow: hidden; background: #fff;
+    pointer-events: none;                            /* invisible until the turn: it must not take the taps meant for the songs */
     perspective: 420px; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #0b0b0b;
   }
   .mc { position: absolute; left: 50%; top: 40px; width: 150px; height: 150px; margin-left: -75px; transform-style: preserve-3d; }
@@ -392,6 +393,21 @@ const place = (d: number) => d === 0
     // The EarPods arrive once the phone is up.
     const phones = new Earphones($<HTMLCanvasElement>('.cables'), $('.case'), intro, { pieces: '/fotos/', ignore: '.unlock' });
     setTimeout(() => phones.start(!still), still ? 0 : 2300);
+
+    // The first song starts by itself as the phone comes up. Browsers only allow sound after a touch,
+    // so if it is held back, it starts with the first touch anywhere (unless that touch picks a song).
+    // (Not through the analyser yet: an audio graph started without a touch stays silent.)
+    setTimeout(() => {
+      if (current >= 0) return;
+      current = 0; load(rows[0].dataset.src!, rows[0].dataset.title!); show(0);
+      player.play().catch(() => {});
+    }, still ? 0 : 2400);
+    const firstTouch = (e: Event) => {
+      if (!player.paused || (e.target as Element).closest('[data-track], .pp')) return;
+      play(current < 0 ? 0 : current);
+    };
+    intro.addEventListener('pointerdown', firstTouch, { capture: true, once: true });
+    addEventListener('keydown', firstTouch, { capture: true, once: true });
     if (import.meta.env.DEV) Object.assign(window, { earphones: phones, player });   // handy from the console
 
     // ---- The way in ----
