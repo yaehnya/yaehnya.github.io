@@ -1,0 +1,69 @@
+---
+// The iPhone 4's ring/silent switch, on the side of the phone where it was (top left, upright; on its
+// side, bottom left), through the case's cut-out. Flicked, it silences the site, the music included,
+// and shows iOS's own bell in the middle of the screen, crossed out or not, as the iPhone did; the
+// orange inside the switch shows when it is on silent. M flicks it too. It is remembered.
+---
+
+<button class="side-switch" type="button" role="switch" aria-checked="false" aria-label="Silencio (tecla M)">
+  <i aria-hidden="true"></i>
+</button>
+
+<style>
+  .side-switch {
+    position: absolute; z-index: 3; left: 21%; bottom: -1.1%; width: calc(var(--dh) * .07); height: calc(var(--dh) * .028);
+    padding: 0; border: 0; border-radius: 2px; cursor: pointer;
+    background: linear-gradient(#f4f4f4, #b9b9b9 45%, #8f8f8f 55%, #d8d8d8); box-shadow: 0 1px 2px rgba(0, 0, 0, .35), inset 0 0 0 .5px rgba(0, 0, 0, .3);
+  }
+  .side-switch i { position: absolute; top: 18%; bottom: 18%; left: 8%; width: 40%; border-radius: 1px; background: linear-gradient(#ececec, #a9a9a9); box-shadow: 0 0 0 .5px rgba(0, 0, 0, .3); transition: left .12s; }
+  /* On silent the switch slides over and shows its orange. */
+  .side-switch[aria-checked='true'] { background: linear-gradient(#ff9a3c, #f06a00); }
+  .side-switch[aria-checked='true'] i { left: 52%; }
+  .side-switch:focus-visible { outline: 2px solid #3a76d8; outline-offset: 2px; }
+  @media (orientation: portrait), (pointer: coarse) and (max-height: 600px) {
+    .side-switch { left: -1.4%; bottom: auto; top: 21%; width: calc(var(--dw) * .028); height: calc(var(--dw) * .07); }
+    .side-switch i { left: 18%; right: 18%; width: auto; top: 8%; bottom: auto; height: 40%; transition: top .12s; }
+    .side-switch[aria-checked='true'] i { left: 18%; top: 52%; }
+  }
+  :global(html[data-intro]) .side-switch { display: none; }
+
+</style>
+
+<!-- The bell (Base.astro places it above the screen). -->
+<style is:global>
+  /* iOS's bell, in its dark rounded square, in the middle of the screen for a moment. */
+  .ring-hud {
+    position: fixed; left: 50%; top: 50%; z-index: 400; display: grid; place-items: center; width: calc(min(var(--dw), var(--dh)) * .32); aspect-ratio: 1;
+    translate: -50% -50%; border-radius: 12%; background: rgba(0, 0, 0, .55); pointer-events: none;
+  }
+  .ring-hud img { width: 55%; height: auto; }
+  .ring-hud .silent, .ring-hud.off .ring { display: none; }
+  .ring-hud.off .silent { display: block; }
+  @media (prefers-reduced-motion: no-preference) { .ring-hud { animation: hud 1.4s ease both; } }
+  @keyframes hud { 0% { opacity: 0; scale: .9; } 12%, 70% { opacity: 1; scale: 1; } 100% { opacity: 0; } }
+</style>
+
+<script>
+  import { player } from '../scripts/player';
+  import { setMuted, muted } from '../scripts/sounds';
+
+  const sw = document.querySelector<HTMLButtonElement>('.side-switch')!;
+  const show = (silent: boolean) => {
+    sw.setAttribute('aria-checked', String(silent));
+    player.muted = silent;
+  };
+  show(muted());
+  let t = 0;
+  const flick = () => {
+    const hud = document.querySelector<HTMLElement>('.ring-hud')!;   // the page's (it changes with the page)
+    const silent = !muted();
+    setMuted(silent);
+    show(silent);
+    hud.classList.toggle('off', silent);
+    hud.hidden = false;
+    hud.style.animation = 'none'; void hud.offsetWidth; hud.style.animation = '';
+    clearTimeout(t); t = window.setTimeout(() => { hud.hidden = true; }, 1400);
+  };
+  sw.addEventListener('click', flick);
+  addEventListener('keydown', e => { if (e.key.toLowerCase() === 'm' && !(e.target as Element).closest('input, textarea, [contenteditable]') && !document.documentElement.classList.contains('bw-on')) flick(); });
+</script>

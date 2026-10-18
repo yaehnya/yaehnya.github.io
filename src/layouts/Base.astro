@@ -9,6 +9,7 @@ import { ClientRouter } from 'astro:transitions';
 import Meta from '../components/Meta.astro';
 import StatusBar from '../components/StatusBar.astro';
 import HomeButton from '../components/HomeButton.astro';
+import SideSwitch from '../components/SideSwitch.astro';
 import Springboard from '../components/Springboard.astro';
 import Notice from '../components/Notice.astro';
 import Switcher from '../components/Switcher.astro';
@@ -43,6 +44,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <div class="device" transition:persist="device">
       <img class="bezel" src="/fotos/iphone.webp" alt="" width="498" height="926" />
       <HomeButton />
+      <SideSwitch />
     </div>
     <div class="screen" id="screen">
       <div class="display" id="display">
@@ -58,6 +60,9 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
         <Notice />
       </div>
     </div>
+    <!-- Above the screen: the first visit's callout at the home button, and the side switch's bell. -->
+    <p class="guide" role="status" hidden><b>Este es el botón de inicio</b><span>Un toque: las apps. Dos toques: la música.</span></p>
+    <div class="ring-hud" aria-hidden="true" hidden><img class="ring" src="/ios/ui/ring.png" alt="" /><img class="silent" src="/ios/ui/silent.png" alt="" /></div>
     <!-- The screen's points, scaled to the photo's screen before the first paint (and again on every
          page, and when the window changes: scripts/transitions.ts). -->
     <script is:inline>
@@ -72,4 +77,5 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
 
 <script>
   import '../scripts/transitions';
+  import '../scripts/device';
 </script>

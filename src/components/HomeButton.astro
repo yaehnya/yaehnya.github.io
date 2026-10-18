@@ -10,6 +10,7 @@
   <span aria-hidden="true"></span>
 </button>
 
+
 <style>
   .home-btn {
     position: absolute; left: 91.4%; top: 50%; z-index: 3; width: calc(var(--dh) * .18); height: calc(var(--dh) * .18);
@@ -24,6 +25,34 @@
   .home-btn:active span { background: rgba(0, 0, 0, .06); box-shadow: inset 0 3px 7px rgba(0, 0, 0, .28); }
   .home-btn:focus-visible { outline: 2px solid #3a76d8; outline-offset: 2px; }
   :global(html[data-intro]) .home-btn, :global(html.bw-on) .home-btn { display: none; }
+
+  @keyframes breathe { 50% { box-shadow: 0 0 0 4px rgba(58, 118, 216, .35); } }
+</style>
+
+<!-- The callout (Base.astro places it above the screen): its position follows the photo's button. -->
+<style is:global>
+  .guide {
+    z-index: 410; position: fixed; right: calc(50% - var(--dw) / 2 + var(--dw) * .086 + var(--dh) * .11); top: 50%; translate: 0 -50%; width: max-content; max-width: 230px;
+    margin: 0; padding: 9px 13px; border-radius: 9px; color: #fff; text-align: center; pointer-events: none;
+    font: 13px/1.3 'Helvetica Neue', Helvetica, Arial, sans-serif; text-shadow: 0 -1px 0 rgba(0, 0, 0, .6);
+    background: linear-gradient(rgba(90, 90, 90, .96), rgba(25, 25, 25, .96) 50%, rgba(0, 0, 0, .96) 51%);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 16px rgba(0, 0, 0, .35);
+  }
+  .guide b, .guide span { display: block; }
+  .guide b { font-size: 14px; }
+  .guide::after { content: ''; position: absolute; right: -7px; top: 50%; translate: 0 -50%; border: 8px solid transparent; border-right: 0; border-left-color: #111; }
+  @media (orientation: portrait), (pointer: coarse) and (max-height: 600px) {
+    .guide { right: auto; left: 50%; top: auto; bottom: calc(50% - var(--dh) / 2 + var(--dh) * .086 + var(--dw) * .11); translate: -50% 0; }
+    .guide::after { right: auto; left: 50%; top: auto; bottom: -7px; translate: -50% 0; border: 8px solid transparent; border-bottom: 0; border-top-color: #000; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .guide:not([hidden]) { animation: guide-in .45s cubic-bezier(.2, 1.3, .4, 1) both; }
+    /* Until it has been pressed once, the button breathes a little. */
+    .home-btn.new span { animation: breathe 1.8s ease-in-out infinite; }
+  }
+  @keyframes guide-in { from { opacity: 0; scale: .8; } }
+  @media (prefers-reduced-motion: no-preference) { .guide:not([hidden]) { animation: guide-in .45s cubic-bezier(.2, 1.3, .4, 1) both; } }
+  @keyframes guide-in { from { opacity: 0; scale: .8; } }
 </style>
 
 <script>
@@ -41,6 +70,22 @@
     }
     wait = window.setTimeout(() => { wait = 0; document.dispatchEvent(new CustomEvent('yeyo:home')); }, 260);
   });
+  // The first visit: the callout and the breathing, until the button is pressed (or a few seconds pass).
+  const guide = document.querySelector<HTMLElement>('.guide')!;
+  const seen = () => { try { return !!localStorage.getItem('yeyo-guia'); } catch { return true; } };
+  const dismiss = () => {
+    guide.hidden = true; btn.classList.remove('new');
+    try { localStorage.setItem('yeyo-guia', '1'); } catch {}
+  };
+  if (!seen()) {
+    btn.classList.add('new');
+    const showGuide = () => { guide.hidden = false; setTimeout(dismiss, 9000); };
+    const waitIntro = () => document.documentElement.hasAttribute('data-intro')
+      ? setTimeout(waitIntro, 500) : setTimeout(showGuide, 1800);
+    waitIntro();
+    btn.addEventListener('click', dismiss, { once: true });
+  }
+
   // The H key presses it too.
   addEventListener('keydown', e => {
     if (e.key.toLowerCase() === 'h' && !(e.target as Element).closest('input, textarea, [contenteditable]')) btn.click();

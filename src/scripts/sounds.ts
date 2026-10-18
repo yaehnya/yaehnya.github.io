@@ -22,6 +22,11 @@ export const vibrationOn = () => buzz;
 export function setSound(v: boolean) { on = v; try { localStorage.setItem(KEY, v ? 'si' : 'no'); } catch {} }
 export function setVibration(v: boolean) { buzz = v; try { localStorage.setItem('yeyo-vibrar', v ? 'si' : 'no'); } catch {} }
 
+// The side switch (SideSwitch.astro): on silent, nothing sounds, the music neither.
+let silent = stored('yeyo-silencio') === 'si';
+export const muted = () => silent;
+export function setMuted(v: boolean) { silent = v; try { localStorage.setItem('yeyo-silencio', v ? 'si' : 'no'); } catch {} }
+
 const touched = () => (navigator.userActivation ? navigator.userActivation.hasBeenActive : true);
 
 function load(a: AudioContext, name: Name) {
@@ -32,7 +37,7 @@ function load(a: AudioContext, name: Name) {
 }
 
 async function play(name: Name, gain = .35) {
-  if (!on || (!touched() && !ctx)) return;
+  if (!on || silent || (!touched() && !ctx)) return;
   ctx ??= new AudioContext();
   if (ctx.state === 'suspended') ctx.resume();
   const buf = await load(ctx, name);

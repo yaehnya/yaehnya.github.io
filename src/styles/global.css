@@ -84,6 +84,8 @@ a { color: inherit; text-decoration: none; }
 /* See-through status bar (over a picture): the page goes under it. */
 body[data-bar='translucido'] .scroller { top: 0; }
 @media (orientation: portrait), (pointer: coarse) and (max-height: 600px) {
+  .screen { transform-origin: calc(var(--dw) * (.5 - .09639)) calc(var(--dh) * (.5 - .17495)); }
+  .screen::before { width: 100%; height: 100%; rotate: none; }
   .bezel { width: var(--dw); height: var(--dh); rotate: none; filter: drop-shadow(0 22px 26px rgba(70, 52, 30, .16)) drop-shadow(0 4px 5px rgba(50, 38, 20, .18)); }
   .screen {
     left: calc(50% - var(--dw) / 2 + var(--dw) * .09639); top: calc(50% - var(--dh) / 2 + var(--dh) * .17495);
@@ -91,6 +93,21 @@ body[data-bar='translucido'] .scroller { top: 0; }
   }
   .display { width: 320px; height: 480px; }
 }
+/* The iPhone leans toward the pointer (scripts/device.ts): the phone and its screen turn together,
+   about the phone's middle, and the light on the glass slides the other way. Over the screen, the
+   glass of a real iPhone 4 (its reflections and dust, faint) and a sheen. */
+.device, .screen { transform: perspective(2400px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)); will-change: transform; }
+.screen { transform-origin: calc(var(--dw) * (.5 - .17495)) calc(var(--dh) * (.5 - .09638)); }
+.screen::before, .screen::after { content: ''; position: absolute; z-index: 300; pointer-events: none; }
+.screen::before {
+  left: 50%; top: 50%; width: calc(var(--dh) * .80723); height: calc(var(--dw) * .65011); translate: -50% -50%; rotate: -90deg;
+  background: url('/fotos/cristal.webp') 0 0 / 100% 100%; mix-blend-mode: screen; opacity: .2;
+}
+.screen::after {
+  inset: 0; mix-blend-mode: screen;
+  background: linear-gradient(112deg, transparent 0 calc(30% + var(--gx, 0) * 12%), rgba(255, 255, 255, .1) calc(36% + var(--gx, 0) * 12%), rgba(255, 255, 255, .03) calc(52% + var(--gx, 0) * 12%), transparent calc(53% + var(--gx, 0) * 12%));
+}
+
 /* While the intro is up, the iPhone of the intro is the one on screen. */
 html[data-intro]:not(.arriving) .device, html[data-intro]:not(.arriving) .screen { visibility: hidden; }
 
