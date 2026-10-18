@@ -1,39 +1,50 @@
-// How the site moves, page to page and down a page.
+// How the site moves, inside the iPhone.
 //
-// Down a page: Lenis smooths the wheel into one soft glide (touch screens keep their own scrolling,
-// which already is). Not with reduced motion. Anything that scrolls on its own, like the Cover Flow,
-// is marked data-lenis-prevent.
+// The screen: a 480 × 320 point display (320 × 480 upright) scaled to the photo's screen; fit() sets
+// the zoom, for every page and whenever the window changes.
 //
-// Page to page (Astro's ClientRouter, with View Transitions): by default the new page slides in from
-// the right and the old one out to the left, as iOS 4 pushed a screen; going back, the other way
-// (global.css). From the springboard, an app opens from its icon instead: launch() passes the icon's
-// place along with the navigation, and the swap would wipe what is set on <html>, so it is set again
-// once the new page is in and cleared when the transition ends.
+// Down a page: the page scrolls inside the screen (#scroller); Lenis smooths the wheel into one soft
+// glide, like a finger flicking (touch screens keep their own scrolling). Not with reduced motion.
+// Anything that scrolls on its own, like the Cover Flow, is marked data-lenis-prevent.
+//
+// Page to page (Astro's ClientRouter, with View Transitions): the new screen pushes in from the right
+// as iOS 4's did; going back, the other way (global.css). From the springboard, launch() opens the app
+// as iOS 4 did, growing from the middle of the screen while the icons fly off; the swap wipes what is
+// set on <html>, so the flag is set again once the new page is in and cleared when the transition ends.
 import Lenis from 'lenis';
 import { navigate } from 'astro:transitions/client';
 import { position } from './player';
+import { onPage } from './page';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const upright = matchMedia('(orientation: portrait)');
 
-export const lenis = still ? null : new Lenis({ autoRaf: true, lerp: .1 });
+/** The screen's zoom: the photo's screen width over the display's width in points. */
+export function fit() {
+  const s = document.getElementById('screen'), d = document.getElementById('display');
+  if (s && d) d.style.zoom = String(s.clientWidth / (upright.matches ? 320 : 480));
+}
+addEventListener('resize', fit);
 
-interface Launch { x: number; y: number; s: number }
+/** The page's scroller (the screen's), and its Lenis while the page is there. */
+export const scroller = () => document.getElementById('scroller');
+export let lenis: Lenis | null = null;
+onPage(signal => {
+  const wrapper = scroller(), content = document.getElementById('world');
+  if (still || !wrapper || !content) return;
+  lenis = new Lenis({ wrapper, content, autoRaf: true, lerp: .12 });
+  signal.addEventListener('abort', () => { lenis?.destroy(); lenis = null; });
+});
+/** Back to the top of the page, as tapping the status bar did. */
+export function toTop() {
+  if (lenis) lenis.scrollTo(0, { duration: .6 });
+  else scroller()?.scrollTo({ top: 0, behavior: still ? 'instant' : 'smooth' });
+}
 
-const setLaunch = (l: Launch | null) => {
-  const root = document.documentElement;
-  if (!l) { root.removeAttribute('data-launch'); return; }
-  root.setAttribute('data-launch', '');
-  root.style.setProperty('--lx', `${l.x}px`);
-  root.style.setProperty('--ly', `${l.y}px`);
-  root.style.setProperty('--ls', String(l.s));
-};
-
-/** Opens a page as an app opening from its icon (`from`, the icon on the springboard). */
-export function launch(href: string, from: Element) {
-  const r = from.getBoundingClientRect();
-  const l: Launch = { x: r.left + r.width / 2, y: r.top + r.height / 2, s: r.width / innerWidth };
-  setLaunch(l);
-  return navigate(href, { info: { launch: l } });
+/** Opens a page as an app from the springboard. */
+export function launch(href: string) {
+  document.documentElement.setAttribute('data-launch', '');
+  return navigate(href, { info: { launch: true } });
 }
 
 // A page that opens on one of several songs according to the link's #hash (the iPod: /musica#cancion-2)
@@ -52,17 +63,20 @@ function fromHash() {
 }
 fromHash();
 
-let pending: Launch | null = null;
+// Where each page was scrolled to, so going back returns there (the page scrolls inside the screen,
+// where the router does not look).
+const scrolled = new Map<string, number>();
+let launching = false;
 document.addEventListener('astro:before-swap', e => {
-  pending = (e.info as { launch?: Launch } | undefined)?.launch ?? null;
-  e.viewTransition.finished.finally(() => { if (!pending) setLaunch(null); });
+  scrolled.set(location.pathname, scroller()?.scrollTop ?? 0);
+  launching = !!(e.info as { launch?: boolean } | undefined)?.launch;
+  e.viewTransition.finished.finally(() => document.documentElement.removeAttribute('data-launch'));
 });
 document.addEventListener('astro:after-swap', () => {
-  setLaunch(pending);
-  pending = null;
+  if (launching) document.documentElement.setAttribute('data-launch', '');
+  fit();
   fromHash();
-  // The router put the scroll where it belongs (the top, or where you were when going back); Lenis
-  // starts from there.
-  lenis?.resize();
-  lenis?.scrollTo(scrollY, { immediate: true, force: true });
+  const back = document.documentElement.getAttribute('data-astro-transition') === 'back';
+  const s = scroller();
+  if (s) s.scrollTop = back ? scrolled.get(location.pathname) ?? 0 : 0;
 });

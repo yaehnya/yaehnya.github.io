@@ -6,7 +6,7 @@
 // The way in is the site's signature: slide the iOS 4 bar ("desliza para entrar"), or on a phone,
 // turn it sideways, and the iPhone turns to landscape, as the iPhone 4's Music app did to open Cover
 // Flow: its screen turns into a Cover Flow, comes up to fill the window, and is the home page. The
-// song keeps playing (scripts/player.ts; NowPlaying.astro shows it). The page puts an inline script in <head> so the intro is decided before first
+// song keeps playing (scripts/player.ts). The page puts an inline script in <head> so the intro is decided before first
 // paint.
 import { site } from '../data/site';
 const songs = site.songs.filter(s => s.audio);
@@ -268,7 +268,6 @@ const place = (d: number) => d === 0
   .intro.turning .lockup, .intro.turning .unlock, .intro.turning .turn-hint, .intro.turning .credit, .intro.turning .cables {
     opacity: 0; transition: opacity .3s; animation: none;
   }
-  .intro.zooming .device { filter: none; }
 
   /* A magazine photo credit, bottom left. */
   .credit {
@@ -309,7 +308,7 @@ const place = (d: number) => d === 0
 <script>
   import { Earphones } from '../scripts/earphones.js';
   import { player, load } from '../scripts/player';
-  import { lock, vibrate } from '../scripts/sounds';
+  import { unlock, vibrate } from '../scripts/sounds';
 
   const root = document.documentElement;
   const intro = document.querySelector<HTMLElement>('.intro');
@@ -424,7 +423,7 @@ const place = (d: number) => d === 0
     const enter = async () => {
       if (gone) return;
       gone = true;
-      lock();                                      // the iPhone 4's unlock click
+      unlock();                                    // the iPhone's own unlock sound
       vibrate(20);
       try { sessionStorage.setItem('yeyo-intro', '1'); } catch { /* private mode: it will show again */ }
       phones.stop();
@@ -434,19 +433,20 @@ const place = (d: number) => d === 0
         await intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, fill: 'forwards' }).finished;
         return done();
       }
-      const r = caseEl.getBoundingClientRect(), sr = screen.getBoundingClientRect();
-      const dx = innerWidth / 2 - (r.left + r.width / 2), dy = innerHeight / 2 - (r.top + r.height / 2);
-      const k = Math.max(innerWidth / sr.height, innerHeight / sr.width) * 1.04;   // the screen, sideways, covers the window
-      const sideways = 'rotate(-90deg) scale(1.06)';
-      ios.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: 250, fill: 'forwards' });
-      $('.flow-mini').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 250, fill: 'forwards' });
-      await caseEl.animate([{ transform: 'none' }, { transform: sideways }],
-        { duration: 760, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'forwards' }).finished;
-      intro.classList.add('zooming');
-      await caseEl.animate([{ transform: sideways }, { transform: `translate(${dx}px, ${dy}px) rotate(-90deg) scale(${k})` }],
-        { duration: 950, easing: 'cubic-bezier(.75, 0, .2, 1)', fill: 'forwards' }).finished;
+      // Where the iPhone ends up: the site's own iPhone (.device), on its side in a wide window, as big
+      // as the window allows; this one turns and moves until it lies exactly over it.
+      const r = caseEl.getBoundingClientRect(), dev = document.querySelector<HTMLElement>('.device')!.getBoundingClientRect();
+      const sideways = dev.width > dev.height;
+      const dx = dev.left + dev.width / 2 - (r.left + r.width / 2), dy = dev.top + dev.height / 2 - (r.top + r.height / 2);
+      const k = (sideways ? dev.height : dev.height) / (sideways ? r.width : r.height);
+      const end = `translate(${dx}px, ${dy}px) ${sideways ? 'rotate(-90deg) ' : ''}scale(${k})`;
+      ios.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 260, delay: sideways ? 300 : 500, fill: 'forwards' });
+      if (sideways) $('.flow-mini').animate([{ opacity: 0 }, { opacity: 1 }], { duration: 260, delay: 300, fill: 'forwards' });
+      await caseEl.animate([{ transform: 'none' }, { transform: end }],
+        { duration: 1100, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'forwards' }).finished;
+      // The site's iPhone is right under it now: show it, and let this one go.
       root.classList.add('arriving');
-      await intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 480, easing: 'ease-out', fill: 'forwards' }).finished;
+      await intro.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 380, easing: 'ease-out', fill: 'forwards' }).finished;
       done();
     };
 

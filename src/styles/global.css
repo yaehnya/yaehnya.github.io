@@ -24,25 +24,77 @@
   --ease-enfasis: cubic-bezier(.65, 0, .35, 1);    /* a turn: even both ways */
   /* A drop that overshoots a little and settles. */
   --bounce: linear(0, .08 4%, .32 12%, .62 22%, .88 33%, 1.03 43%, 1.055 49%, 1.04 56%, 1.005 66%, .99 74%, .998 86%, 1);
-  --sbh: 20px;                                     /* iOS 4's status bar */
+  --sbh: 20px;                                     /* iOS 4's status bar, 20 points */
+  --m: 14px;                                       /* the white around the iPhone */
+  /* The iPhone of the photo (498 × 926), lying on its side, as big as the window allows. */
+  --dw: min(100vw - 2 * var(--m), (100dvh - 2 * var(--m)) * 926 / 498);
+  --dh: calc(var(--dw) * 498 / 926);
   color-scheme: light;
 }
-@media (min-width: 900px) { :root { --sbh: 22px; } }
+/* A window taller than wide (a phone held upright): the iPhone stands up too. */
+@media (orientation: portrait) {
+  :root { --dh: min(100dvh - 2 * var(--m), (100vw - 2 * var(--m)) * 926 / 498); --dw: calc(var(--dh) * 498 / 926); }
+}
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html { background: var(--bg); color: var(--ink); -webkit-text-size-adjust: 100%; }
-body { margin: 0; min-height: 100svh; font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
+body { height: 100dvh; margin: 0; overflow: hidden; background: var(--bg); font: 14px/1.5 var(--sans); -webkit-font-smoothing: antialiased; }
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
 :focus-visible { outline: 1.5px solid var(--ink); outline-offset: 3px; }
 
-#world { background: var(--bg); min-height: 100svh; }
+/* ---- The iPhone ----
+   The whole site lives inside the iPhone 4 of the photo, on its side (upright in an upright window),
+   with a little white around it. Its screen is a 480 × 320 point display (320 × 480 upright), as the
+   iPhone 4's was, scaled up to the photo's screen (scripts/transitions.ts sets the zoom): everything
+   in it is measured in the iPhone's points, so the status bar, the bars, the icons and the type are
+   the real ones' size against the screen, and Apple's artwork (at 2x) stays sharp. */
+.device {
+  position: fixed; left: 50%; top: 50%; z-index: 1; width: var(--dw); height: var(--dh); translate: -50% -50%;
+  view-transition-name: device;
+}
+.bezel {
+  position: absolute; left: 50%; top: 50%; width: var(--dh); height: var(--dw); max-width: none; translate: -50% -50%; rotate: -90deg;
+  filter: drop-shadow(-22px 0 26px rgba(70, 52, 30, .16)) drop-shadow(-4px 0 5px rgba(50, 38, 20, .18));
+  -webkit-user-select: none; user-select: none; -webkit-user-drag: none; pointer-events: none;
+}
+/* Where the photo's screen is (measured on it: 9.639% from the side, 17.495% from the top, 80.723% ×
+   65.011%), turned with the phone. */
+.screen {
+  position: fixed; z-index: 2; overflow: hidden; background: #000;
+  left: calc(50% - var(--dw) / 2 + var(--dw) * .17495); top: calc(50% - var(--dh) / 2 + var(--dh) * .09638);
+  width: calc(var(--dw) * .65011); height: calc(var(--dh) * .80723);
+  view-transition-name: screen;
+}
+.display {
+  position: relative; width: 480px; height: 320px; overflow: hidden; background: var(--bg);
+  container-type: size; container-name: display;
+}
+.scroller {
+  position: absolute; inset: var(--sbh) 0 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: none;
+}
+.scroller::-webkit-scrollbar { display: none; }
+/* See-through status bar (over a picture): the page goes under it. */
+body[data-bar='translucido'] .scroller { top: 0; }
+@media (orientation: portrait) {
+  .bezel { width: var(--dw); height: var(--dh); rotate: none; filter: drop-shadow(0 22px 26px rgba(70, 52, 30, .16)) drop-shadow(0 4px 5px rgba(50, 38, 20, .18)); }
+  .screen {
+    left: calc(50% - var(--dw) / 2 + var(--dw) * .09639); top: calc(50% - var(--dh) / 2 + var(--dh) * .17495);
+    width: calc(var(--dw) * .80723); height: calc(var(--dh) * .65011);
+  }
+  .display { width: 320px; height: 480px; }
+}
+/* While the intro is up, the iPhone of the intro is the one on screen. */
+html[data-intro]:not(.arriving) .device, html[data-intro]:not(.arriving) .screen { visibility: hidden; }
+
+#world { min-height: 100%; background: var(--bg); }
 
 /* The wordmark, set like the Saint Laurent logo: bold grotesque capitals packed so tight they almost
    touch, and under them a line of widely spaced wedge-serif capitals, like "PARIS". */
 .wordmark {
-  margin: 0; font: 700 clamp(44px, 6vw, 110px)/.84 var(--sans); letter-spacing: -.045em;
+  margin: 0; font: 700 clamp(30px, 10cqw, 64px)/.84 var(--sans); letter-spacing: -.045em;
   text-transform: uppercase; text-align: center; font-style: normal;
 }
 /* Bold grotesque is drawn stretched: wider and a little lower than the font. */
@@ -54,9 +106,9 @@ a { color: inherit; text-decoration: none; }
 
 .label { font: 400 11px/1.4 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
 
-/* Inner pages: room under the status bar and above the home button, a wordmark heading. */
-.page { min-height: 100svh; padding: calc(var(--sbh) + 76px) 24px 120px; }
-.page > .wordmark { margin-bottom: 72px; }
+/* Inner pages: a wordmark heading, the page under it. */
+.page { min-height: 100%; padding: 26px 14px 36px; }
+.page > .wordmark { margin-bottom: 26px; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
@@ -68,32 +120,32 @@ a { color: inherit; text-decoration: none; }
 }
 @keyframes title-in { from { opacity: 0; filter: blur(10px); scale: 1.05; } }
 
-/* Page to page, as iOS 4 moved between screens (scripts/transitions.ts). Forward, the new page pushes
-   in from the right and the old one goes out to the left; back, the other way. The status bar, the home
-   button and what's playing have names of their own, so they stay put. */
-::view-transition-group(root) { animation-duration: .42s; }
-html[data-astro-transition='forward']::view-transition-old(root) { animation: push-out-left .42s cubic-bezier(.45, 0, .2, 1) both; }
-html[data-astro-transition='forward']::view-transition-new(root) { animation: push-in-right .42s cubic-bezier(.45, 0, .2, 1) both; }
-html[data-astro-transition='back']::view-transition-old(root) { animation: push-out-right .42s cubic-bezier(.45, 0, .2, 1) both; }
-html[data-astro-transition='back']::view-transition-new(root) { animation: push-in-left .42s cubic-bezier(.45, 0, .2, 1) both; }
+/* Page to page, as iOS 4 moved between screens (scripts/transitions.ts): only the screen moves, the
+   iPhone around it stays. Forward, the new screen pushes in from the right and the old one goes out to
+   the left, both the whole width; back, the other way. The status bar and the iPhone have names of
+   their own, so they stay put. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+::view-transition-group(screen) { overflow: clip; animation-duration: .35s; }
+html[data-astro-transition='forward']::view-transition-old(screen) { animation: push-out-left .35s cubic-bezier(.4, 0, .2, 1) both; }
+html[data-astro-transition='forward']::view-transition-new(screen) { animation: push-in-right .35s cubic-bezier(.4, 0, .2, 1) both; }
+html[data-astro-transition='back']::view-transition-old(screen) { animation: push-out-right .35s cubic-bezier(.4, 0, .2, 1) both; }
+html[data-astro-transition='back']::view-transition-new(screen) { animation: push-in-left .35s cubic-bezier(.4, 0, .2, 1) both; }
 @keyframes push-in-right { from { transform: translateX(100%); } }
 @keyframes push-out-left { to { transform: translateX(-100%); } }
 @keyframes push-in-left { from { transform: translateX(-100%); } }
 @keyframes push-out-right { to { transform: translateX(100%); } }
 
-/* From the springboard, the app opens out of its icon (--lx, --ly: the icon's centre; --ls: its size
-   against the screen) while the home screen behind it flies apart. */
-html[data-launch]::view-transition-new(root) {
-  transform-origin: var(--lx) var(--ly);
-  animation: app-open .5s cubic-bezier(.2, .75, .25, 1) both;
-}
-html[data-launch]::view-transition-old(root) { animation: home-apart .5s cubic-bezier(.4, 0, .6, 1) both; }
-@keyframes app-open { from { transform: scale(var(--ls)); opacity: 0; } 35% { opacity: 1; } }
-@keyframes home-apart { to { transform: scale(1.7); opacity: 0; } }
+/* From the springboard, as iOS 4 opened an app: the app grows from the middle of the screen while the
+   icons fly off past the edges; the wallpaper stays where it is until the app covers it. */
+html[data-launch]::view-transition-old(screen) { animation: none; }
+html[data-launch]::view-transition-new(screen) { animation: app-open .42s cubic-bezier(.25, .6, .3, 1) both; }
+html[data-launch]::view-transition-old(sb-icons) { animation: icons-away .42s cubic-bezier(.5, 0, .7, .4) both; }
+@keyframes app-open { from { transform: scale(.1); opacity: 0; } 25% { opacity: 1; } }
+@keyframes icons-away { to { transform: scale(2.4); opacity: 0; } }
 
-/* What travels from page to page (a cover into the music page) moves as a turn does. */
+/* What travels from page to page (a cover into the iPod) moves as a turn does. */
 ::view-transition-group(*) { animation-duration: var(--dur-larga); animation-timing-function: var(--ease-enfasis); }
-::view-transition-group(statusbar), ::view-transition-group(home-button), ::view-transition-group(now-playing) { animation-duration: .42s; }
+::view-transition-group(screen), ::view-transition-group(statusbar), ::view-transition-group(device), ::view-transition-group(sb-icons) { animation-duration: .42s; }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }

@@ -11,8 +11,8 @@ const segments = [['todo', 'Todo'], ['ropa', 'Ropa'], ['musica', 'Música']] as 
 ---
 
 <Base title="Tienda" page="tienda" description={`La tienda de ${site.name}: ropa y discos.`}>
-  <main class="page store">
-    <h1 class="wordmark"><span class="wm">Tienda</span><small>{site.name}</small></h1>
+  <main class="store">
+    <h1 class="sr-only">Tienda de {site.name}</h1>
 
     <section class="appstore" aria-label={`Tienda de ${site.name}`}>
       <header class="as-nav"><b>Destacados</b></header>
@@ -59,18 +59,11 @@ const segments = [['todo', 'Todo'], ['ropa', 'Ropa'], ['musica', 'Música']] as 
 </Base>
 
 <style>
-  .store { display: grid; justify-items: center; align-content: start; }
-  .page > .wordmark { margin-bottom: 48px; }
-
-  /* The App Store's screen: a phone-wide column in the case's beige, like Contacto's Messages. */
-  .appstore {
-    width: min(460px, 100%); overflow: hidden; border-radius: 22px; background: #fff; color: #000;
-    box-shadow: 0 0 0 10px #f4f2ee, 0 0 0 11px #e2ddd2, 0 30px 60px rgba(70, 52, 30, .18);
-    font: 15px/1.3 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: none; letter-spacing: 0;
-  }
+  /* The App Store, the whole screen. */
+  .appstore { min-height: calc(100cqh - var(--sbh)); background: #fff; color: #000; font: 15px/1.3 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: none; letter-spacing: 0; }
   .as-nav {
-    display: grid; place-items: center; height: 44px; border-bottom: 1px solid #2d3642; color: #fff;
-    background: linear-gradient(#b0bccd, #889bb3 50%, #8195af 51%, #6d84a2); font-size: 20px; text-shadow: 0 -1px 0 rgba(0, 0, 0, .45);
+    position: sticky; top: 0; z-index: 2; display: grid; place-items: center; height: 44px; color: #fff; font-size: 20px; text-shadow: 0 -1px 0 rgba(0, 0, 0, .45);
+    background: url('/ios/ui/UINavigationBarDefaultBackground.png') 0 0 / 100% 44px;
   }
 
   /* The banner: the featured things side by side, one at a time, sliding. */
@@ -78,7 +71,7 @@ const segments = [['todo', 'Todo'], ['ropa', 'Ropa'], ['musica', 'Música']] as 
   .slides { display: flex; margin: 0; padding: 0; list-style: none; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; }
   .slides::-webkit-scrollbar { display: none; }
   .slides li { flex: 0 0 100%; scroll-snap-align: start; }
-  .slides a { position: relative; display: block; aspect-ratio: 2 / 1; overflow: hidden; color: #fff; }
+  .slides a { position: relative; display: block; height: 130px; overflow: hidden; color: #fff; }
   .slides img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; -webkit-user-drag: none; }
   .cap {
     position: absolute; left: 0; right: 0; bottom: 0; display: grid; padding: 26px 14px 12px;
@@ -90,16 +83,16 @@ const segments = [['todo', 'Todo'], ['ropa', 'Ropa'], ['musica', 'Música']] as 
   .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .45); transition: background-color .3s; }
   .dots i.on { background: #fff; }
 
-  /* The segments, iOS 4's bar style. */
-  .bar { padding: 7px 10px; border-bottom: 1px solid #8f99a6; background: linear-gradient(#e2e7ee, #b4bfcd); }
-  .segmented { display: flex; border: 1px solid #4b5a71; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 0 rgba(255, 255, 255, .6); }
+  /* The segments: UIKit's bar-style segmented control, Apple's artwork, under the bar's own toolbar. */
+  .bar { padding: 7px 8px; background: url('/ios/ui/UIButtonBarDefaultBackground.png') 0 0 / 100% 100%; }
+  .segmented { display: flex; }
   .segmented button {
-    flex: 1; height: 30px; padding: 0; border: 0; border-left: 1px solid #4b5a71; color: #fff; cursor: pointer;
-    font: 700 13px/1 inherit; font-family: inherit; text-shadow: 0 -1px 0 rgba(0, 0, 0, .4);
-    background: linear-gradient(#a4b2c5, #7d90aa 50%, #71859f 51%, #7c8fa8);
+    flex: 1; height: 30px; padding: 0; color: #fff; cursor: pointer; background: none;
+    font: 700 13px/30px 'Helvetica Neue', Helvetica, Arial, sans-serif; text-shadow: 0 -1px 0 rgba(0, 0, 0, .4);
+    border: 0 solid; border-image: url('/ios/ui/UISegmentBarButton.png') 0 10 fill / 0 5px;
   }
-  .segmented button:first-child { border-left: 0; }
-  .segmented button[aria-checked='true'] { background: linear-gradient(#5f84c3, #3c64a8 50%, #2f579d 51%, #3a62a6); box-shadow: inset 0 1px 3px rgba(0, 0, 0, .35); }
+  .segmented button + button { margin-left: -1px; }
+  .segmented button[aria-checked='true'] { border-image-source: url('/ios/ui/UISegmentBarButtonHighlighted.png'); }
   .segmented button:focus-visible { outline: 2px solid #fff; outline-offset: -3px; }
 
   /* The list: each product as an app, with its glossy icon and the price button. */
@@ -142,7 +135,6 @@ const segments = [['todo', 'Todo'], ['ropa', 'Ropa'], ['musica', 'Música']] as 
 
 <script>
   import { onPage } from '../scripts/page';
-  import { tick } from '../scripts/sounds';
 
   onPage(signal => {
     const store = document.querySelector<HTMLElement>('.appstore');
@@ -161,7 +153,6 @@ const segments = [['todo', 'Todo'], ['ropa', 'Ropa'], ['musica', 'Música']] as 
       e.preventDefault();
       b.classList.add('buy');
       b.querySelector('span')!.textContent = 'COMPRAR';
-      tick();
     }, { signal });
     document.addEventListener('click', e => { if (!store.contains(e.target as Node)) reset(); }, { signal });
 

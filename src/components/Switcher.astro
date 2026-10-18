@@ -1,0 +1,99 @@
+---
+// iOS 4's multitasking bar, with its music page: two quick presses of the home button and the screen
+// slides up, uncovering the bar under it, on Apple's own background, with the orientation lock, the
+// iPod's controls and the iPod's icon (all Apple's artwork, public/ios/). A tap on the screen above it
+// or the home button again puts it away.
+---
+
+<div class="switcher" aria-label="Controles de la música" role="group" hidden>
+  <button class="sw-lock" type="button" aria-pressed="false" aria-label="Bloqueo de orientación"><img src="/ios/ui/RotationUnlockButton.png" alt="" width="59" height="60" /></button>
+  <div class="sw-controls">
+    <button class="sw-prev" type="button" aria-label="Canción anterior"><img src="/ios/ui/MCPrev.png" alt="" width="47" height="47" /></button>
+    <button class="sw-pp" type="button" aria-label="Reproducir"><img class="play" src="/ios/ui/MCPlay.png" alt="" width="47" height="47" /><img class="pause" src="/ios/ui/MCPause.png" alt="" width="47" height="47" /></button>
+    <button class="sw-next" type="button" aria-label="Canción siguiente"><img src="/ios/ui/MCNext.png" alt="" width="47" height="47" /></button>
+  </div>
+  <a class="sw-ipod" href="/musica" aria-label="Abrir el iPod"><img src="/ios/iconos/ipod.png" alt="" width="57" height="57" /><span>iPod</span></a>
+</div>
+
+<style>
+  .switcher {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 140; display: grid; grid-template-columns: 76px 1fr 76px;
+    align-items: center; height: 94px; padding: 0 4px;
+    background: url('/ios/ui/FolderSwitcherBG.png') 0 0 / 320px auto;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  }
+  .switcher::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 28px; background: url('/ios/ui/SwitcherShadowTop.png') 0 0 / 100% 100%; pointer-events: none; }
+  .switcher button, .sw-ipod { display: grid; place-items: center; padding: 0; border: 0; background: none; cursor: pointer; color: #fff; }
+  .sw-lock img { width: 59px; height: 60px; }
+  .sw-lock[aria-pressed='true'] img { filter: drop-shadow(0 0 4px #6cf) brightness(1.2); }
+  .sw-controls { display: flex; justify-content: center; gap: 14px; }
+  .sw-controls img { width: 47px; height: 47px; }
+  .sw-controls button:active img { filter: brightness(1.4); }
+  .sw-pp .pause, .switcher.playing .sw-pp .play { display: none; }
+  .switcher.playing .sw-pp .pause { display: block; }
+  .sw-ipod { gap: 3px; font-size: 11px; font-weight: 700; text-shadow: 0 1px 1px #000; }
+  .sw-ipod img { width: 57px; height: 57px; }
+  .switcher :focus-visible { outline: 2px solid #fff; outline-offset: 2px; border-radius: 8px; }
+</style>
+
+<script>
+  import { onPage } from '../scripts/page';
+  import { player, toggle, step } from '../scripts/player';
+  import { scroller, launch } from '../scripts/transitions';
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+
+  onPage(signal => {
+    const bar = document.querySelector<HTMLElement>('.switcher');
+    if (!bar) return;
+    const sb = document.getElementById('springboard')!;
+    let up = false, lifted: Animation[] = [];
+    // What slides up: the page, or the springboard if it is the one showing.
+    const screens = () => [sb.hidden ? scroller()! : sb];
+
+    const sync = () => {
+      bar.classList.toggle('playing', !player.paused);
+      bar.querySelector('.sw-pp')!.setAttribute('aria-label', player.paused ? 'Reproducir' : 'Pausa');
+    };
+    player.addEventListener('play', sync, { signal });
+    player.addEventListener('pause', sync, { signal });
+    sync();
+
+    const open = () => {
+      if (up) return;
+      up = true;
+      bar.hidden = false;
+      lifted = screens().map(el => {
+        el.style.zIndex = '145';
+        return el.animate([{ transform: 'none' }, { transform: 'translateY(-94px)' }], { duration: still.matches ? 0 : 300, easing: 'cubic-bezier(.3, 0, .2, 1)', fill: 'forwards' });
+      });
+      bar.querySelector<HTMLElement>('.sw-pp')?.focus({ preventScroll: true });
+    };
+    const close = async () => {
+      if (!up) return;
+      up = false;
+      lifted.forEach(a => a.reverse());
+      await Promise.all(lifted.map(a => a.finished.catch(() => {})));
+      lifted.forEach(a => { a.cancel(); (a.effect as KeyframeEffect).target && ((a.effect as KeyframeEffect).target as HTMLElement).style.removeProperty('z-index'); });
+      bar.hidden = true;
+    };
+
+    document.addEventListener('yeyo:home2', () => (up ? close() : open()), { signal });
+    document.addEventListener('yeyo:home', e => { if (up) { e.stopImmediatePropagation(); close(); } }, { capture: true, signal });
+    // A tap on the screen above the bar puts it away (and does nothing else).
+    document.getElementById('display')!.addEventListener('click', e => {
+      if (up && !bar.contains(e.target as Node)) { e.preventDefault(); e.stopPropagation(); close(); }
+    }, { capture: true, signal });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && up) close(); }, { signal });
+
+    bar.querySelector('.sw-pp')!.addEventListener('click', toggle, { signal });
+    bar.querySelector('.sw-prev')!.addEventListener('click', () => step(-1), { signal });
+    bar.querySelector('.sw-next')!.addEventListener('click', () => step(1), { signal });
+    const lock = bar.querySelector<HTMLButtonElement>('.sw-lock')!;
+    lock.addEventListener('click', () => lock.setAttribute('aria-pressed', String(lock.getAttribute('aria-pressed') !== 'true')), { signal });
+    bar.querySelector('.sw-ipod')!.addEventListener('click', e => {
+      e.preventDefault();
+      close().then(() => { if (document.body.dataset.page !== 'musica') launch('/musica'); });
+    }, { signal });
+  });
+</script>

@@ -1,16 +1,17 @@
 ---
-// Every page but the game's. The site is the iPhone 4: iOS 4's status bar across the top, the home
-// button at the foot, and behind it the springboard with the sections as apps. The pages change without
-// reloading (ClientRouter), so the song goes on playing; the status bar, the home button and what's
-// playing stay put while the page under them slides in (transition:persist).
+// Every page but the game's. The whole site is inside an iPhone 4 running iOS 4: the photo's iPhone on
+// its side with a little white around it, and on its screen the status bar, the page, and behind it
+// the springboard with the sections as apps. The photo's home button is the home button. The pages
+// change without reloading (ClientRouter), so the song goes on playing; the iPhone and the status bar
+// stay put while the screen under them changes (transition:persist).
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import Meta from '../components/Meta.astro';
 import StatusBar from '../components/StatusBar.astro';
 import HomeButton from '../components/HomeButton.astro';
 import Springboard from '../components/Springboard.astro';
-import NowPlaying from '../components/NowPlaying.astro';
 import Notice from '../components/Notice.astro';
+import Switcher from '../components/Switcher.astro';
 import { site, type Page } from '../data/site';
 
 interface Props {
@@ -37,15 +38,33 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <slot name="head" />
   </head>
   <body data-bar={bar} data-page={page}>
-    <StatusBar />
-    <!-- #world is the page: what slides in and out, and what shrinks into its icon. -->
-    <div id="world">
-      <slot />
+    <div class="device" transition:persist="device">
+      <img class="bezel" src="/fotos/iphone.webp" alt="" width="498" height="926" />
+      <HomeButton />
     </div>
-    <NowPlaying />
-    <Notice />
-    <Springboard page={page} />
-    <HomeButton />
+    <div class="screen" id="screen">
+      <div class="display" id="display">
+        <StatusBar />
+        <!-- The page: what slides in and out, and what shrinks away when the home button is pressed. -->
+        <div class="scroller" id="scroller">
+          <div id="world">
+            <slot />
+          </div>
+        </div>
+        <Springboard page={page} />
+        <Switcher />
+        <Notice />
+      </div>
+    </div>
+    <!-- The screen's points, scaled to the photo's screen before the first paint (and again on every
+         page, and when the window changes: scripts/transitions.ts). -->
+    <script is:inline>
+      (function () {
+        var s = document.getElementById('screen'), d = document.getElementById('display');
+        d.style.zoom = String(s.clientWidth / (matchMedia('(orientation: portrait)').matches ? 320 : 480));
+      })();
+    </script>
+    <slot name="overlay" />
   </body>
 </html>
 
