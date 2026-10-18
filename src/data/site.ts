@@ -95,9 +95,6 @@ export const site = {
   // Fechas: a full-bleed picture with the dates over its right side.
   tour: { image: '/fotos/fechas.webp', alt: 'Guts sentado junto a su espada, viñeta de Berserk', width: 825, height: 413, subtitle: 'tour 2026' },
 
-  // The cover in front of the songs, Saint Laurent campaign style. `ink`: the wordmark's colour on it.
-  musicCover: { src: '/fotos/portada-musica.svg', alt: 'Yeyo, portada', width: 1800, height: 1200, ink: '#0b0b0b' },
-
   // The springboard's wallpaper (the iPhone's home screen, opened with the home button). Until there is
   // a photo of Yeyo, the cover of the latest song; while a song plays, its cover.
   wallpaper: { src: songs[0].image, alt: '' },

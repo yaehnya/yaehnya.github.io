@@ -1,97 +1,481 @@
 ---
-// The songs as a magazine: first a cover, Saint Laurent campaign style, then each song as a page
-// (a big photo, the credit set vertically at its foot, a folio with the listen links).
+// Música is the iPod of iOS 4, playing Yeyo's songs: "Now Playing", drawn at the iPhone 4's 320-point
+// width and scaled to the screen (on a computer, a phone-sized column with the song's title huge behind
+// it). The black bar with artist, song and release; the cover as big as the screen; over it, the
+// scrubber with repeat and shuffle; under it, the glossy controls, the volume and where else to listen.
+// Tap the cover (or the button top right) and it flips over to the track list, as on the iPhone;
+// swipe it sideways for the next or the previous song. It plays through the site's one player, so the
+// song goes on when you leave. /musica#cancion-2 opens on the second song: a cover flying in from the
+// Cover Flow lands here (scripts/transitions.ts).
 import Base from '../layouts/Base.astro';
 import { site } from '../data/site';
 
-const { musicCover: cover } = site;
-const two = (n: number) => String(n).padStart(2, '0');
-const total = two(site.songs.length);
-const dot = (iso: string) => iso.split('-').reverse().join('.');   // 2026-07-29 → 29.07.2026
+const songs = site.songs.filter(s => s.audio);
+const year = (iso?: string) => iso?.slice(0, 4) ?? '';
+// Which cover shows, from data-index on the iPod (set before the page is shown; see transitions.ts).
+const pick = songs.map((_, i) => `.ipod[data-index="${i}"] .art:nth-child(${i + 1}){translate:0 0;visibility:visible}`).join('')
+  + '.ipod:not([data-index]) .art:first-child{translate:0 0;visibility:visible}';
 ---
 
-<Base title="Música" page="musica">
-  <main class="songs">
-    <section class="cover" aria-label="Portada" style={`--ink: ${cover.ink}`}>
-      <img src={cover.src} alt={cover.alt} width={cover.width} height={cover.height} fetchpriority="high" />
-      <h1 class="wordmark cover-mark"><span class="wm">{site.name}</span>{site.tagline && <small>{site.tagline}</small>}</h1>
-      <ul class="headlines">
-        {site.songs.map((s, i) => <li><a href={`#cancion-${i + 1}`}><span class="stretch">{s.title}</span></a></li>)}
-      </ul>
-      <p class="issue label">Música — N° {total}</p>
-    </section>
+<Base title="Música" page="musica" bar="negro" description={`Escucha a ${site.name}: ${songs.map(s => `«${s.title}»`).join(' y ')}.`}>
+  <style is:inline set:html={pick}></style>
+  <main class="ipod" data-hash="cancion-" data-years={songs.map(s => year(s.date)).join(',')}>
+    <h1 class="sr-only">Música de {site.name}</h1>
+    <p class="backdrop" aria-hidden="true">
+      {songs.map((s, i) => <span class="stretch" data-i={i}>{s.title}</span>)}
+    </p>
 
-    {site.songs.map((s, i) => (
-      <article class="song" id={`cancion-${i + 1}`} aria-label={s.title}>
-        <figure>
-          <figcaption>{s.caption}</figcaption>
-          <img src={s.image} alt={`Portada de ${s.title}`} width={s.width} height={s.height} loading="lazy" style={`view-transition-name: portada-${i + 1}`} />
-        </figure>
-        <footer class="folio label">
-          <span>{two(i + 1)} / {total}{s.date && ` — ${dot(s.date)}`}</span>
-          <span class="listen">
-            {s.apple && <a href={s.apple} target="_blank" rel="noopener">Apple Music ↗</a>}
-            {s.spotify && <a href={s.spotify} target="_blank" rel="noopener">Spotify ↗</a>}
-            {s.youtube && <a href={s.youtube} target="_blank" rel="noopener">YouTube ↗</a>}
-          </span>
-        </footer>
-      </article>
-    ))}
+    <section class="app" aria-label="iPod">
+      <header class="nav">
+        <a class="back" href="/">Inicio</a>
+        <p class="now" aria-live="polite">
+          <span class="artist">{site.name.charAt(0) + site.name.slice(1).toLowerCase()}</span>
+          <b class="song">{songs[0]?.title}</b>
+          <span class="album">Sencillo · {year(songs[0]?.date)}</span>
+        </p>
+        <button class="flip-btn" type="button" aria-pressed="false" aria-label="Ver la lista de canciones">
+          <svg class="list-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h2M9 6h11M4 12h2M9 12h11M4 18h2M9 18h11" /></svg>
+          <img class="thumb" src={songs[0]?.image} alt="" width="30" height="30" />
+        </button>
+      </header>
+
+      <div class="stage">
+        <div class="card">
+          <div class="front">
+            <div class="arts">
+              {songs.map((s, i) => (
+                <img class="art" src={s.image} alt={`Portada de ${s.title}`} width={s.width} height={s.height}
+                  data-vt={`portada-${i + 1}`} draggable="false" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : undefined} />
+              ))}
+            </div>
+            <div class="scrub">
+              <p class="count"><span class="pos">1</span> de {songs.length}</p>
+              <div class="bar">
+                <button class="repeat" type="button" aria-pressed="false" aria-label="Repetir la canción">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3l3 3-3 3" /><path d="M4 11V9a3 3 0 0 1 3-3h13M7 21l-3-3 3-3" /><path d="M20 13v2a3 3 0 0 1-3 3H4" /></svg>
+                </button>
+                <span class="t elapsed">0:00</span>
+                <input class="seek" type="range" min="0" max="1000" step="1" value="0" aria-label="Posición en la canción" />
+                <span class="t remaining">-0:00</span>
+                <button class="shuffle" type="button" aria-pressed="false" aria-label="Aleatorio">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c5 0 7 10 12 10h3M3 17h3c2 0 3.4-1.6 4.6-3.6M13.4 9.6C14.6 8 16 7 18 7h3M18 4l3 3-3 3M18 14l3 3-3 3" /></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="back-side" inert>
+            <p class="list-head"><span class="dots" aria-hidden="true">• • • • •</span><span class="total">{songs.length} canciones</span></p>
+            <ol class="list">
+              {songs.map((s, i) => (
+                <li>
+                  <button type="button" data-i={i}>
+                    <span class="n">{i + 1}</span>
+                    <svg class="speaker" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16 8.5a5 5 0 0 1 0 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" /></svg>
+                    <span class="ti">{s.title}</span>
+                    <span class="d">–:––</span>
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="buttons">
+          <button class="prev" type="button" aria-label="Canción anterior">
+            <svg viewBox="0 0 48 32" aria-hidden="true"><path d="M6 4h5v24H6zM25 4v24L11 16zM42 4v24L28 16z" /></svg>
+          </button>
+          <button class="pp" type="button" aria-label="Reproducir">
+            <svg class="play" viewBox="0 0 32 32" aria-hidden="true"><path d="M8 3v26l21-13z" /></svg>
+            <svg class="pause" viewBox="0 0 32 32" aria-hidden="true"><path d="M7 4h7v24H7zM18 4h7v24h-7z" /></svg>
+          </button>
+          <button class="next" type="button" aria-label="Canción siguiente">
+            <svg viewBox="0 0 48 32" aria-hidden="true"><path d="M6 4v24l14-12zM23 4v24l14-12zM37 4h5v24h-5z" /></svg>
+          </button>
+        </div>
+        <label class="volume">
+          <span class="sr-only">Volumen</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /></svg>
+          <input class="vol" type="range" min="0" max="100" step="1" value="100" />
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+        </label>
+        <div class="links">
+          {songs.map((s, i) => (
+            <p class="for" data-i={i} hidden={i !== 0}>
+              {s.apple && <a href={s.apple} target="_blank" rel="noopener">Apple Music</a>}
+              {s.spotify && <a href={s.spotify} target="_blank" rel="noopener">Spotify</a>}
+              {s.youtube && <a href={s.youtube} target="_blank" rel="noopener">YouTube</a>}
+            </p>
+          ))}
+        </div>
+      </div>
+    </section>
   </main>
 </Base>
 
 <style>
-  /* Cover: full-bleed photo, the logo huge across the top, cover lines bottom left, issue bottom right. */
-  .cover { position: relative; height: 100svh; min-height: 520px; overflow: hidden; color: var(--ink); scroll-snap-align: start; background: var(--panel); }
-  .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: grayscale(1); }
-  .cover-mark { position: absolute; top: 64px; left: 0; right: 0; font-size: clamp(96px, 22vw, 400px); }
-  .headlines { position: absolute; left: 24px; bottom: 96px; display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
-  .headlines .stretch { transform-origin: left center; }
-  .headlines a { font: 700 clamp(20px, 2.6vw, 34px)/1.05 var(--sans); letter-spacing: -.03em; }   /* titles as the artist writes them */
-  .headlines a:hover { text-decoration: underline; text-underline-offset: 4px; }
-  .issue { position: absolute; right: 24px; bottom: 96px; margin: 0; font-weight: 600; }
+  :global(body[data-page='musica']) { background: #000; }
+  .ipod {
+    position: relative; min-height: 100svh; overflow: hidden; background: #000; color: #fff;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: none; letter-spacing: 0;
+  }
+  /* On a computer, the song's title huge behind the iPod, in the site's stretched bold. */
+  .backdrop { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; padding: 0 3vw; pointer-events: none; }
+  .backdrop span {
+    grid-area: 1 / 1; max-width: 100%; text-align: center; color: rgba(255, 255, 255, .07);
+    font: 700 clamp(56px, 7.6vw, 170px)/.86 var(--sans); letter-spacing: -.045em; text-transform: uppercase;
+    opacity: 0; transition: opacity .7s var(--ease-enfasis);
+  }
+  .backdrop span.on { opacity: 1; }
+  @media (max-width: 760px) { .backdrop { display: none; } }
 
-  .song {
-    display: grid; grid-template-rows: 1fr auto; min-height: 100svh; padding: 64px 24px 96px;
-    scroll-snap-align: start;
+  /* The iPod, 320 points wide, scaled to its column: 1 point is --pt. It ends above the home button, as
+     the iPhone's screen ended above its own. */
+  .app {
+    --pt: calc(100cqw / 320);
+    position: relative; z-index: 1; display: grid; grid-template-rows: auto auto 1fr;
+    width: min(100vw, calc((100svh - var(--sbh) - 80px) * 320 / 490)); height: calc(100svh - var(--sbh) - 80px);
+    margin: var(--sbh) auto 0; container-type: inline-size; background: #000;
+    box-shadow: 0 0 0 1px #151515, 0 30px 80px rgba(0, 0, 0, .9);
   }
-  figure { display: grid; grid-template-columns: 48px minmax(0, 1fr) 48px; align-items: end; min-height: 0; margin: 0; }
-  /* The covers keep their colour: they are the artist's artwork. */
-  figure img {
-    grid-column: 2; justify-self: center; width: auto; max-height: calc(100svh - 180px); object-fit: contain;
-  }
-  /* Vertical, reading bottom to top, at the foot of the picture: "8Belial & YYY991: YSL". */
-  figcaption {
-    grid-column: 1; justify-self: start; writing-mode: vertical-rl; rotate: 180deg;
-    font: 15px/1 var(--serif); white-space: nowrap;
-  }
-  .folio { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 14px 48px 0; color: var(--muted); }
-  .listen { display: flex; gap: 18px; color: var(--ink); }
-  .listen a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  @media (max-width: 760px) { .app { box-shadow: none; } }
 
-  /* Leafing through it: as you scroll past a page it turns away around its left edge, like a
-     magazine's, and the next one is already there under it; a cover settles as its page arrives. */
-  .cover, .song { transform-origin: left center; }
-  @keyframes leaf { to { transform: perspective(2200px) rotateY(-62deg); opacity: .15; } }
-  @keyframes settle-in { from { scale: 1.05; } }
-  @supports ((animation-timeline: view()) and (animation-range: entry)) {
-    @media (prefers-reduced-motion: no-preference) {
-      .cover, .song { animation: leaf linear both; }
-      figure img { animation: settle-in linear both; }
-      /* Timelines in rules of their own (the minifier would fold them into the shorthand). */
-      .songs > .cover, .songs > .song { animation-timeline: view(); animation-range: exit 15% exit 100%; }
-      .song figure img { animation-timeline: view(); animation-range: entry 10% cover 45%; }
-    }
+  /* The black bar: a back button, the three lines, the list button. */
+  .nav {
+    position: relative; z-index: 3; display: grid; grid-template-columns: calc(var(--pt) * 62) minmax(0, 1fr) calc(var(--pt) * 62);
+    align-items: center; height: calc(var(--pt) * 44); padding: 0 calc(var(--pt) * 5); border-bottom: 1px solid #000;
+    background: linear-gradient(rgba(255, 255, 255, .18), rgba(255, 255, 255, .05) 50%, transparent 51%), linear-gradient(#2c2c2c, #070707);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+  }
+  .back {
+    justify-self: start; display: grid; place-items: center; height: calc(var(--pt) * 30); padding: 0 calc(var(--pt) * 8) 0 calc(var(--pt) * 15);
+    border: 1px solid #000; border-radius: calc(var(--pt) * 5); color: #fff; white-space: nowrap;
+    font-size: calc(var(--pt) * 11.5); font-weight: 700; text-shadow: 0 -1px 0 #000;
+    clip-path: polygon(calc(var(--pt) * 10) 0, 100% 0, 100% 100%, calc(var(--pt) * 10) 100%, 0 50%);
+    background: linear-gradient(#5f5f5f, #2c2c2c 50%, #1b1b1b 51%, #282828); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  }
+  .now { display: grid; justify-items: center; gap: calc(var(--pt) * 1); min-width: 0; margin: 0; text-align: center; line-height: 1.15; font-size: calc(var(--pt) * 12); font-weight: 700; text-shadow: 0 -1px 0 #000; }
+  .now > * { max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .now .artist, .now .album { color: #a7a7a7; }
+  .flip-btn {
+    justify-self: end; position: relative; display: grid; place-items: center; width: calc(var(--pt) * 32); height: calc(var(--pt) * 30); padding: 0;
+    border: 1px solid #000; border-radius: calc(var(--pt) * 5); color: #fff; cursor: pointer; overflow: hidden;
+    background: linear-gradient(#5f5f5f, #2c2c2c 50%, #1b1b1b 51%, #282828); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .3);
+  }
+  .list-ic { width: 70%; height: 70%; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; filter: drop-shadow(0 -1px 0 #000); }
+  .thumb { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s; }
+  .ipod.flipped .thumb { opacity: 1; }
+
+  /* The cover, as big as the screen is wide; it turns over to the list. */
+  .stage { position: relative; width: 100%; aspect-ratio: 1; perspective: calc(var(--pt) * 1100); }
+  .card { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .75s cubic-bezier(.65, 0, .35, 1); }
+  .ipod.flipped .card { transform: rotateY(-180deg); }
+  .front, .back-side { position: absolute; inset: 0; overflow: hidden; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+  .arts { position: absolute; inset: 0; touch-action: pan-y; cursor: grab; }
+  .arts.dragging { cursor: grabbing; }
+  .art {
+    position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; background: #111;
+    translate: 100% 0; visibility: hidden; -webkit-user-select: none; user-select: none; -webkit-user-drag: none;
   }
 
-  @media (max-width: 760px) {
-    .cover-mark { top: 72px; }
-    .headlines { bottom: 128px; right: 24px; }
-    .issue { bottom: 96px; right: auto; left: 24px; }          /* clear of the bar above and the logos below */
-    .song { min-height: auto; padding: 64px 12px 40px 6px; }
-    .song:last-child { padding-bottom: 110px; }               /* clear of the social logos */
-    figure { grid-template-columns: 28px minmax(0, 1fr); }
-    figcaption { font-size: 13px; }
-    .folio { padding: 12px 0 0 28px; flex-direction: column; }
+  /* Over the top of the cover: which song of how many, the scrubber with its times, repeat and shuffle. */
+  .scrub {
+    position: absolute; left: 0; right: 0; top: 0; z-index: 2; padding: calc(var(--pt) * 4) calc(var(--pt) * 7) calc(var(--pt) * 8);
+    background: rgba(0, 0, 0, .64); box-shadow: 0 1px 0 rgba(255, 255, 255, .06);
   }
+  .count { margin: 0 0 calc(var(--pt) * 4); text-align: center; font-size: calc(var(--pt) * 12); font-weight: 700; text-shadow: 0 -1px 0 #000; }
+  .bar { display: grid; grid-template-columns: calc(var(--pt) * 26) calc(var(--pt) * 36) minmax(0, 1fr) calc(var(--pt) * 40) calc(var(--pt) * 26); align-items: center; gap: calc(var(--pt) * 3); }
+  .t { font-size: calc(var(--pt) * 11.5); font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; text-shadow: 0 -1px 0 #000; }
+  .repeat, .shuffle { display: grid; place-items: center; width: calc(var(--pt) * 26); height: calc(var(--pt) * 26); padding: 0; border: 0; background: none; color: #fff; cursor: pointer; opacity: .55; }
+  .repeat svg, .shuffle svg { width: 80%; height: 80%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 -1px 0 #000); }
+  .repeat[aria-pressed='true'], .shuffle[aria-pressed='true'] { opacity: 1; color: #6cb6ff; }
+  .repeat[aria-pressed='true'] svg, .shuffle[aria-pressed='true'] svg { filter: drop-shadow(0 0 3px rgba(80, 160, 255, .9)); }
+
+  /* Sliders, iOS 4 style: a rounded groove, filled to the knob; the knob a silver bead. */
+  input[type='range'] { -webkit-appearance: none; appearance: none; width: 100%; height: calc(var(--pt) * 24); margin: 0; background: none; cursor: pointer; }
+  input[type='range']::-webkit-slider-runnable-track {
+    height: calc(var(--pt) * 7); border-radius: 99px; box-shadow: inset 0 1px 2px rgba(0, 0, 0, .7), 0 1px 0 rgba(255, 255, 255, .12);
+    background: linear-gradient(rgba(255, 255, 255, .4), rgba(255, 255, 255, 0) 60%), linear-gradient(90deg, var(--fill) calc(var(--p, 0) * 1%), var(--rest) 0);
+  }
+  input[type='range']::-moz-range-track { height: calc(var(--pt) * 7); border-radius: 99px; background: linear-gradient(rgba(255, 255, 255, .4), transparent 60%), var(--rest); box-shadow: inset 0 1px 2px rgba(0, 0, 0, .7); }
+  input[type='range']::-moz-range-progress { height: calc(var(--pt) * 7); border-radius: 99px; background: linear-gradient(rgba(255, 255, 255, .4), transparent 60%), var(--fill); }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none; width: var(--knob); height: var(--knob); margin-top: calc((var(--pt) * 7 - var(--knob)) / 2); border: 0; border-radius: 50%;
+    background: radial-gradient(circle at 50% 30%, #fff, #e6e6e6 45%, #a9a9a9); box-shadow: 0 1px 3px rgba(0, 0, 0, .8), inset 0 -1px 1px rgba(0, 0, 0, .2);
+  }
+  input[type='range']::-moz-range-thumb {
+    width: var(--knob); height: var(--knob); border: 0; border-radius: 50%;
+    background: radial-gradient(circle at 50% 30%, #fff, #e6e6e6 45%, #a9a9a9); box-shadow: 0 1px 3px rgba(0, 0, 0, .8);
+  }
+  input[type='range']:focus-visible { outline: 2px solid #6cb6ff; outline-offset: 2px; border-radius: 4px; }
+  .seek { --knob: calc(var(--pt) * 15); --fill: #dcdcdc; --rest: #3c3c3c; }
+  .vol { --knob: calc(var(--pt) * 23); --fill: #3b7ff0; --rest: #dedede; }
+
+  /* The track list on the back: black rows, the playing one with the blue speaker. */
+  .back-side { transform: rotateY(180deg); display: grid; grid-template-rows: auto 1fr; background: #0b0b0b; }
+  .list-head {
+    display: flex; justify-content: space-between; align-items: center; margin: 0; padding: calc(var(--pt) * 9) calc(var(--pt) * 12);
+    border-bottom: 1px solid #2a2a2a; color: #a7a7a7; font-size: calc(var(--pt) * 12); font-weight: 700;
+    background: linear-gradient(#262626, #141414);
+  }
+  .list-head .dots { color: #6d6d6d; letter-spacing: .1em; }
+  .list { margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+  .list button {
+    display: grid; grid-template-columns: calc(var(--pt) * 22) minmax(0, 1fr) auto; align-items: center; gap: calc(var(--pt) * 6); width: 100%;
+    min-height: calc(var(--pt) * 44); padding: 0 calc(var(--pt) * 12); border: 0; border-bottom: 1px solid #222; background: none;
+    color: #fff; font: inherit; font-size: calc(var(--pt) * 14); font-weight: 700; text-align: left; cursor: pointer;
+  }
+  .list li:nth-child(odd) button { background: rgba(255, 255, 255, .035); }
+  .list button:hover, .list button:focus-visible { background: rgba(255, 255, 255, .1); outline: none; }
+  .list .n { color: #8d8d8d; font-size: calc(var(--pt) * 13); }
+  .list .speaker { display: none; width: calc(var(--pt) * 18); height: calc(var(--pt) * 18); fill: #5aa8ff; color: #5aa8ff; }
+  .list button.current .n { display: none; }
+  .list button.current .speaker { display: block; }
+  .list .ti { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .list .d { color: #8d8d8d; font-size: calc(var(--pt) * 13); font-variant-numeric: tabular-nums; }
+
+  /* Under the cover: the controls, glossy black, the volume, and where else to listen. */
+  .controls {
+    display: grid; align-content: space-evenly; gap: calc(var(--pt) * 6); padding: calc(var(--pt) * 6) calc(var(--pt) * 22);
+    border-top: 1px solid #3c3c3c;
+    background: linear-gradient(rgba(255, 255, 255, .15), rgba(255, 255, 255, .03) calc(var(--pt) * 34), transparent calc(var(--pt) * 35)), linear-gradient(#202020, #000 80%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+  }
+  .buttons { display: flex; justify-content: space-between; align-items: center; padding: 0 calc(var(--pt) * 22); }
+  .buttons button { display: grid; place-items: center; width: calc(var(--pt) * 62); height: calc(var(--pt) * 46); padding: 0; border: 0; border-radius: calc(var(--pt) * 8); background: none; cursor: pointer; }
+  .buttons svg { width: calc(var(--pt) * 40); height: calc(var(--pt) * 27); fill: url(#ipod-gloss); filter: drop-shadow(0 -1px 0 #000) drop-shadow(0 1px 1px rgba(0, 0, 0, .8)); }
+  .buttons .pp svg { width: calc(var(--pt) * 30); height: calc(var(--pt) * 30); }
+  .buttons button:active svg { filter: drop-shadow(0 0 6px rgba(255, 255, 255, .8)); }
+  .buttons button:focus-visible { outline: 2px solid #6cb6ff; outline-offset: -2px; }
+  .pp .pause, .ipod.playing .pp .play { display: none; }
+  .ipod.playing .pp .pause { display: block; }
+  .volume { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: calc(var(--pt) * 8); color: #d8d8d8; }
+  .volume svg { width: calc(var(--pt) * 16); height: calc(var(--pt) * 16); fill: currentColor; }
+  .links p { display: flex; justify-content: center; flex-wrap: wrap; gap: calc(var(--pt) * 7); margin: 0; }
+  .links p[hidden] { display: none; }
+  .links a {
+    padding: calc(var(--pt) * 6) calc(var(--pt) * 11); border: 1px solid #000; border-radius: calc(var(--pt) * 6); color: #fff;
+    font-size: calc(var(--pt) * 11.5); font-weight: 700; text-shadow: 0 -1px 0 #000;
+    background: linear-gradient(#5b5b5b, #2b2b2b 50%, #1a1a1a 51%, #262626); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), 0 1px 0 rgba(255, 255, 255, .08);
+  }
+  .links a:hover { filter: brightness(1.2); }
+  .links a:focus-visible { outline: 2px solid #6cb6ff; outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
 </style>
+
+<!-- The gloss on the control glyphs: white at the top, light grey below the middle. -->
+<svg width="0" height="0" style="position: absolute" aria-hidden="true">
+  <defs><linearGradient id="ipod-gloss" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" /><stop offset=".5" stop-color="#f2f2f2" /><stop offset=".52" stop-color="#cfcfcf" /><stop offset="1" stop-color="#e4e4e4" /></linearGradient></defs>
+</svg>
+
+<script>
+  import { onPage } from '../scripts/page';
+  import { player, library, nowPlaying, playTrack, load, shuffle } from '../scripts/player';
+
+  const fmt = (s: number) => (isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00');
+  const durations: number[] = [];
+
+  onPage(signal => {
+    const ipod = document.querySelector<HTMLElement>('.ipod');
+    if (!ipod) return;
+    const $ = <T extends Element = HTMLElement>(s: string) => ipod.querySelector<T>(s)!;
+    const arts = [...ipod.querySelectorAll<HTMLImageElement>('.art')];
+    const strip = $('.arts'), card = $('.card');
+    const seek = $<HTMLInputElement>('.seek'), vol = $<HTMLInputElement>('.vol');
+    const rows = [...ipod.querySelectorAll<HTMLButtonElement>('.list button')];
+    const n = library.length;
+    let cur = Number(ipod.dataset.index) || 0;
+    const mine = () => nowPlaying()?.src === library[cur]?.src;       // is the song showing the one loaded?
+
+    // ---- Showing a song ----
+    const label = () => {
+      const s = library[cur], song = document.querySelectorAll<HTMLElement>('.backdrop span');
+      $('.now .song').textContent = s.title;
+      $('.pos').textContent = String(cur + 1);
+      $<HTMLImageElement>('.thumb').src = s.cover ?? '';
+      ipod.querySelectorAll<HTMLElement>('.links .for').forEach((p, i) => { p.hidden = i !== cur; });
+      song.forEach((el, i) => el.classList.toggle('on', i === cur));
+      rows.forEach((r, i) => r.classList.toggle('current', i === cur && mine()));
+      $('.now .album').textContent = `Sencillo · ${ipod.dataset.years?.split(',')[cur] ?? ''}`;
+      ipod.dataset.index = String(cur);
+      time();
+    };
+
+    // Slide to song j, the old cover leaving to one side and the new one coming from the other, as on a
+    // swipe; `from` is how far a finger had already dragged it.
+    let sliding = false;
+    const slide = async (j: number, dir: 1 | -1, from = 0) => {
+      if (sliding || j === cur) return;
+      const w = strip.clientWidth, incoming = arts[j];
+      if (matchMedia('(prefers-reduced-motion: reduce)').matches) { cur = j; label(); return; }
+      sliding = true;
+      Object.assign(incoming.style, { translate: `${dir * 100}% 0`, visibility: 'visible' });
+      const a = strip.animate([{ transform: `translateX(${from}px)` }, { transform: `translateX(${-dir * w}px)` }],
+        { duration: Math.max(220, 420 * (1 - Math.abs(from) / w)), easing: 'cubic-bezier(.2, .7, .2, 1)', fill: 'forwards' });
+      await a.finished.catch(() => {});
+      cur = j;
+      label();
+      incoming.style.translate = incoming.style.visibility = '';
+      a.cancel();
+      sliding = false;
+    };
+    const go = (dir: 1 | -1, from = 0) => {
+      const j = shuffle() && n > 2 ? (cur + 1 + Math.floor(Math.random() * (n - 1))) % n : (cur + dir + n) % n;
+      const playing = !player.paused;
+      slide(j, dir, from).then(() => { if (playing) playTrack(library[cur].src, library[cur].title); });
+    };
+
+    // ---- Time ----
+    let raf = 0, scrubbing = false;
+    const time = () => {
+      const d = mine() ? player.duration : durations[cur];
+      const t = mine() ? player.currentTime : 0;
+      if (!scrubbing) seek.value = String(d ? Math.round((t / d) * 1000) : 0);
+      seek.style.setProperty('--p', String(Number(seek.value) / 10));
+      $('.elapsed').textContent = fmt(t);
+      $('.remaining').textContent = `-${fmt((d || 0) - t)}`;
+    };
+    const loop = () => { time(); raf = player.paused ? 0 : requestAnimationFrame(loop); };
+    const playing = () => {
+      ipod.classList.toggle('playing', !player.paused && mine());
+      $('.pp').setAttribute('aria-label', !player.paused && mine() ? 'Pausa' : 'Reproducir');
+      rows.forEach((r, i) => r.classList.toggle('current', i === cur && mine()));
+      cancelAnimationFrame(raf);
+      if (!player.paused) raf = requestAnimationFrame(loop); else time();
+    };
+    player.addEventListener('play', playing, { signal });
+    player.addEventListener('pause', playing, { signal });
+    player.addEventListener('loadedmetadata', time, { signal });
+    signal.addEventListener('abort', () => cancelAnimationFrame(raf));
+    // A song that changes by itself (one ended, or the lock screen's buttons) slides in too.
+    addEventListener('yeyo:track', e => {
+      const j = library.findIndex(t => t.src === (e as CustomEvent<{ src: string }>).detail.src);
+      if (j >= 0 && j !== cur && !sliding) slide(j, j > cur || (cur === n - 1 && j === 0) ? 1 : -1);
+      playing();
+    }, { signal });
+
+    // Each song's length, from its file's header only, for the list and the scrubber.
+    library.forEach((t, i) => {
+      if (durations[i]) { rows[i].querySelector('.d')!.textContent = fmt(durations[i]); return; }
+      const probe = new Audio();
+      probe.preload = 'metadata';
+      probe.src = t.src;
+      probe.addEventListener('loadedmetadata', () => {
+        durations[i] = probe.duration;
+        rows[i].querySelector('.d')!.textContent = fmt(probe.duration);
+        if (durations.filter(Boolean).length === n) $('.total').textContent = `${n} canciones, ${Math.round(durations.reduce((a, b) => a + b, 0) / 60)} min`;
+        if (i === cur) time();
+      }, { once: true });
+    });
+
+    // ---- Controls ----
+    $('.pp').addEventListener('click', () => {
+      if (!mine()) playTrack(library[cur].src, library[cur].title);
+      else if (player.paused) player.play().catch(() => {});
+      else player.pause();
+    }, { signal });
+    $('.next').addEventListener('click', () => go(1), { signal });
+    $('.prev').addEventListener('click', () => {
+      if (mine() && player.currentTime > 3) { player.currentTime = 0; return; }
+      go(-1);
+    }, { signal });
+    const repeat = $('.repeat'), shuf = $('.shuffle');
+    repeat.setAttribute('aria-pressed', String(player.loop));
+    shuf.setAttribute('aria-pressed', String(shuffle()));
+    repeat.addEventListener('click', () => { player.loop = !player.loop; repeat.setAttribute('aria-pressed', String(player.loop)); }, { signal });
+    shuf.addEventListener('click', () => { shuffle(!shuffle()); shuf.setAttribute('aria-pressed', String(shuffle())); }, { signal });
+
+    seek.addEventListener('input', () => {
+      scrubbing = true;
+      seek.style.setProperty('--p', String(Number(seek.value) / 10));
+      const d = mine() ? player.duration : durations[cur];
+      $('.elapsed').textContent = fmt((Number(seek.value) / 1000) * (d || 0));
+    }, { signal });
+    seek.addEventListener('change', () => {
+      scrubbing = false;
+      const to = Number(seek.value) / 1000;
+      if (!mine()) load(library[cur].src, library[cur].title);
+      const apply = () => { player.currentTime = to * player.duration; time(); };
+      if (player.readyState >= 1) apply(); else player.addEventListener('loadedmetadata', apply, { once: true });
+    }, { signal });
+
+    vol.value = String(Math.round(player.volume * 100));
+    const volume = () => { player.volume = Number(vol.value) / 100; vol.style.setProperty('--p', vol.value); };
+    volume();
+    vol.addEventListener('input', volume, { signal });
+
+    // ---- Flipping over to the list ----
+    const flip = (on = !ipod.classList.contains('flipped')) => {
+      ipod.classList.toggle('flipped', on);
+      $('.back-side').inert = !on;
+      const btn = $('.flip-btn');
+      btn.setAttribute('aria-pressed', String(on));
+      btn.setAttribute('aria-label', on ? 'Ver la portada' : 'Ver la lista de canciones');
+    };
+    $('.flip-btn').addEventListener('click', () => flip(), { signal });
+    $('.back-side').addEventListener('click', e => {
+      const b = (e.target as Element).closest<HTMLButtonElement>('button[data-i]');
+      if (!b) return;
+      const j = Number(b.dataset.i);
+      cur = j;
+      label();
+      playTrack(library[j].src, library[j].title);
+      setTimeout(() => flip(false), 350);
+    }, { signal });
+
+    // ---- The cover: tap to flip, swipe to change song ----
+    let drag: { x: number; y: number; t: number; id: number; moved: boolean } | null = null;
+    strip.addEventListener('pointerdown', e => {
+      if (sliding || e.button !== 0) return;
+      drag = { x: e.clientX, y: e.clientY, t: performance.now(), id: e.pointerId, moved: false };
+    }, { signal });
+    strip.addEventListener('pointermove', e => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.moved) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        if (Math.abs(dy) > Math.abs(dx)) { drag = null; return; }      // scrolling the page, not swiping
+        drag.moved = true;
+        strip.setPointerCapture(drag.id);
+        strip.classList.add('dragging');
+      }
+      // Show the neighbour the finger is pulling in.
+      const dir = dx < 0 ? 1 : -1, j = (cur + dir + n) % n;
+      arts.forEach((a, i) => {
+        if (i === cur) return;
+        Object.assign(a.style, i === j ? { translate: `${dir * 100}% 0`, visibility: 'visible' } : { translate: '', visibility: '' });
+      });
+      strip.style.transform = `translateX(${dx}px)`;
+    }, { signal });
+    const release = (e: PointerEvent) => {
+      if (!drag) return;
+      const d = drag;
+      drag = null;
+      strip.classList.remove('dragging');
+      if (!d.moved) { if (e.type === 'pointerup') flip(true); return; }
+      const dx = e.clientX - d.x, v = dx / Math.max(1, performance.now() - d.t);
+      strip.style.transform = '';
+      if (Math.abs(dx) > strip.clientWidth * .2 || Math.abs(v) > .45) go(dx < 0 ? 1 : -1, dx);
+      else {
+        const back = strip.animate([{ transform: `translateX(${dx}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(.2, .9, .3, 1.2)' });
+        back.finished.then(() => arts.forEach((a, i) => { if (i !== cur) a.style.translate = a.style.visibility = ''; })).catch(() => {});
+      }
+    };
+    strip.addEventListener('pointerup', release, { signal });
+    strip.addEventListener('pointercancel', release, { signal });
+    card.addEventListener('keydown', e => { if (e.key === 'Escape') flip(false); }, { signal });
+
+    // Keys: space plays and pauses, the arrows change song.
+    document.addEventListener('keydown', e => {
+      if ((e.target as Element).closest('input, textarea, button, a') && e.key === ' ') return;
+      if (e.key === ' ') { e.preventDefault(); $('.pp').click(); }
+      if (e.key === 'ArrowRight') go(1);
+      if (e.key === 'ArrowLeft') $('.prev').click();
+    }, { signal });
+
+    label();
+    playing();
+  });
+</script>

@@ -408,7 +408,11 @@ const place = (d: number) => d === 0
     player.addEventListener('play', () => { intro.classList.add('playing'); $('.pp').setAttribute('aria-label', 'Pausa'); });
     player.addEventListener('pause', () => { intro.classList.remove('playing'); $('.pp').setAttribute('aria-label', 'Reproducir'); });
     player.addEventListener('timeupdate', () => ios.style.setProperty('--p', `${(player.currentTime / player.duration) * 100 || 0}%`));
-    player.addEventListener('ended', () => play((current + 1) % rows.length));
+    // When a song ends the player goes on to the next (scripts/player.ts); the list follows it.
+    addEventListener('yeyo:track', e => {
+      const i = rows.findIndex(r => r.dataset.src === (e as CustomEvent<{ src: string }>).detail.src);
+      if (i >= 0 && i !== current) { current = i; show(i); }
+    });
 
     // The EarPods arrive once the phone is up.
     const phones = new Earphones($<HTMLCanvasElement>('.cables'), $('.case'), intro, { pieces: '/fotos/', ignore: '.unlock' });

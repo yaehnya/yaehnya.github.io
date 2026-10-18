@@ -11,6 +11,7 @@
 // once the new page is in and cleared when the transition ends.
 import Lenis from 'lenis';
 import { navigate } from 'astro:transitions/client';
+import { position } from './player';
 
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -35,6 +36,22 @@ export function launch(href: string, from: Element) {
   return navigate(href, { info: { launch: l } });
 }
 
+// A page that opens on one of several songs according to the link's #hash (the iPod: /musica#cancion-2)
+// marks its container data-hash="cancion-" and the songs' covers [data-vt]. The one the hash names is
+// picked here, before the new page is shown (data-index on the container, and that cover's
+// view-transition-name from its data-vt), so a cover flying in from the last page lands on it.
+function fromHash() {
+  const box = document.querySelector<HTMLElement>('[data-hash]');
+  if (!box) return;
+  const items = [...box.querySelectorAll<HTMLElement>('[data-vt]')];
+  const m = location.hash.match(new RegExp(`^#${box.dataset.hash}(\\d+)$`));
+  // Without a hash, the song playing (or the first); and nothing flies in.
+  const i = m ? Math.min(Math.max(+m[1] - 1, 0), items.length - 1) : Math.max(position(), 0);
+  box.dataset.index = String(i);
+  items.forEach((el, k) => { el.style.viewTransitionName = m && k === i ? el.dataset.vt! : ''; });
+}
+fromHash();
+
 let pending: Launch | null = null;
 document.addEventListener('astro:before-swap', e => {
   pending = (e.info as { launch?: Launch } | undefined)?.launch ?? null;
@@ -43,6 +60,7 @@ document.addEventListener('astro:before-swap', e => {
 document.addEventListener('astro:after-swap', () => {
   setLaunch(pending);
   pending = null;
+  fromHash();
   // The router put the scroll where it belongs (the top, or where you were when going back); Lenis
   // starts from there.
   lenis?.resize();
