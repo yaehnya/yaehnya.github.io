@@ -10,19 +10,17 @@ import StatusBar from '../components/StatusBar.astro';
 import HomeButton from '../components/HomeButton.astro';
 import Springboard from '../components/Springboard.astro';
 import NowPlaying from '../components/NowPlaying.astro';
-import Bolaweb from '../components/Bolaweb.astro';
 import { site, type Page } from '../data/site';
 
 interface Props {
   title?: string;
   description?: string;
   page: Page;
-  game?: boolean;        // load the ball game on this page (it starts only from a [data-bolaweb] button)
   bar?: 'gris' | 'negro' | 'translucido';   // the status bar: iOS 4's grey; black (the iPod); see-through over a picture
   image?: string;          // the share picture for this page, 1200 × 630 (default: public/og/yeyo.jpg)
 }
 
-const { title, description = site.description, page, game = false, bar = 'gris', image } = Astro.props;
+const { title, description = site.description, page, bar = 'gris', image } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 
@@ -39,14 +37,13 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
   </head>
   <body data-bar={bar} data-page={page}>
     <StatusBar />
-    <!-- #world is the page: what slides in and out, what shrinks into its icon, what the ball rolls over. -->
+    <!-- #world is the page: what slides in and out, and what shrinks into its icon. -->
     <div id="world">
       <slot />
     </div>
     <NowPlaying />
     <Springboard page={page} />
     <HomeButton />
-    {game && <Bolaweb />}
   </body>
 </html>
 

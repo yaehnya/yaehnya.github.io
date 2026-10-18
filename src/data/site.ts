@@ -17,6 +17,7 @@ export interface Song {
 
 export interface Show {
   date: string;          // ISO date, e.g. "2026-11-14"
+  time?: string;         // doors or start, local, "21:00"; without it the calendar event lasts all day
   city: string;
   venue: string;
   tickets?: string;      // without it, and not sold out, the row just has no button
@@ -109,6 +110,7 @@ export const site = {
 
   songs,
 
+  // Each opens as an iOS Calendar event on Fechas, with its .ics. [PENDIENTE: fechas, horas y boletos reales]
   shows: [
     { date: '2026-11-14', city: 'Ciudad de México', venue: 'Sala de ejemplo', tickets: 'https://example.com/entradas' },
     { date: '2026-11-21', city: 'Guadalajara', venue: 'Foro de ejemplo', tickets: 'https://example.com/entradas' },

@@ -1,14 +1,20 @@
 ---
 // The dates as a poster, like nicebassbro.com: the picture full-bleed, the title glowing, and each date
-// on its own dark band over the right side of the picture.
+// on its own dark band over the right side of the picture. A date opens as an event in iOS 4's
+// Calendar, sliding up from the bottom: where and when, the alert, the tickets, how to get there, and
+// "Agregar a mi calendario", the show's .ics file (pages/fechas/[show].ics.ts), which the phone opens
+// in its own Calendar app.
 import Base from '../layouts/Base.astro';
 import { site } from '../data/site';
+import { slug, longDate } from '../data/calendar';
 
 // Shows are filtered when the site is built, so rebuild after a date passes.
 const today = new Date().toISOString().slice(0, 10);
 const shows = site.shows.filter(s => s.date >= today);
 const short = (iso: string) => { const [, m, d] = iso.split('-'); return `${+d}/${+m}`; };   // 2026-11-14 → 14/11
 const { tour } = site;
+const artist = site.name.charAt(0) + site.name.slice(1).toLowerCase();
+const maps = (q: string) => `https://maps.google.com/?q=${encodeURIComponent(q)}`;
 ---
 
 <Base title="Fechas" page="fechas" bar="translucido">
@@ -21,9 +27,10 @@ const { tour } = site;
         <ol class="dates">
           {shows.map((s, i) => (
             <li style={`--i: ${i}`}>
-              {s.tickets && !s.soldOut
-                ? <a class="band" href={s.tickets} target="_blank" rel="noopener">{short(s.date)} {s.city}</a>
-                : <span class:list={['band', { sold: s.soldOut }]}>{short(s.date)} {s.city}{s.soldOut && <small> agotado</small>}</span>}
+              <button class:list={['band', { sold: s.soldOut }]} type="button" data-event={`evento-${i}`} aria-haspopup="dialog">
+                <span class="what">{short(s.date)} {s.city}</span>{s.soldOut && <small>agotado</small>}
+                <svg class="cal" viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
+              </button>
             </li>
           ))}
         </ol>
@@ -32,6 +39,34 @@ const { tour } = site;
       )}
     </div>
   </main>
+
+  {shows.map((s, i) => (
+    <dialog class="event" id={`evento-${i}`} aria-labelledby={`evento-${i}-t`} data-lenis-prevent>
+      <form method="dialog" class="ev-nav">
+        <button class="ev-back" type="submit">Fechas</button>
+        <b>Evento</b>
+      </form>
+      <div class="ev-body">
+        <div class="group ev-head">
+          <h2 id={`evento-${i}-t`}>{artist} en {s.city}</h2>
+          <p class="venue">{s.venue}</p>
+          <p class="day">{longDate(s.date)}</p>
+          <p class="hour">{s.time ? `a las ${s.time}` : 'Hora por confirmar'}</p>
+        </div>
+        <ul class="group">
+          <li><span class="row"><span>Alerta</span><span class="val">1 día antes</span></span></li>
+          {s.soldOut
+            ? <li><span class="row"><span>Boletos</span><span class="val">Agotado</span></span></li>
+            : s.tickets && <li><a class="row" href={s.tickets} target="_blank" rel="noopener"><span>Boletos</span><span class="val">Comprar ›</span></a></li>}
+          <li><a class="row" href={maps(`${s.venue}, ${s.city}`)} target="_blank" rel="noopener"><span>Cómo llegar</span><span class="val">Mapa ›</span></a></li>
+        </ul>
+        <ul class="group">
+          <li><a class="row add" href={`/fechas/${slug(s)}.ics`} download={`${slug(s)}.ics`} data-astro-reload>Agregar a mi calendario</a></li>
+        </ul>
+        <p class="foot">Se abre en la app de Calendario de tu teléfono, con una alerta un día antes.</p>
+      </div>
+    </dialog>
+  ))}
 </Base>
 
 <style>
@@ -54,12 +89,65 @@ const { tour } = site;
   }
   .dates { display: grid; justify-items: start; gap: 7px; margin: 0; padding: 0; list-style: none; }
   .band {
-    display: inline-block; margin: 0; padding: .05em .3em .1em; background: rgba(20, 30, 42, .82); color: #fff;
-    font: 500 clamp(22px, 2.5vw, 38px)/1.12 var(--sans); letter-spacing: -.035em; transition: background-color .2s;
+    display: inline-flex; align-items: center; gap: .35em; margin: 0; padding: .05em .3em .1em; border: 0;
+    background: rgba(20, 30, 42, .82); color: #fff; text-align: left; cursor: pointer;
+    font: 500 clamp(22px, 2.5vw, 38px)/1.12 var(--sans); letter-spacing: -.035em;
+    transition: background-color .2s, translate var(--dur-micro) var(--ease-entrada);
   }
-  a.band:hover, a.band:focus-visible { background: rgba(0, 0, 0, .95); }
-  .sold { text-decoration: line-through; text-decoration-thickness: .06em; }
-  .sold small { display: inline-block; margin-left: .5em; font-size: .55em; letter-spacing: .04em; text-transform: uppercase; }
+  .band:hover, .band:focus-visible { background: rgba(0, 0, 0, .95); translate: -4px 0; }
+  .band:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  /* A little calendar shows up on the band under the pointer: it opens the event. */
+  .cal { width: .7em; height: .7em; fill: none; stroke: currentColor; stroke-width: 2; opacity: 0; translate: -4px 0; transition: opacity .2s, translate .2s; }
+  .band:hover .cal, .band:focus-visible .cal { opacity: .85; translate: 0 0; }
+  .sold .what { text-decoration: line-through; text-decoration-thickness: .06em; }
+  .sold small { font-size: .55em; letter-spacing: .04em; text-transform: uppercase; }
+
+  /* The event: iOS 4's Calendar, a sheet sliding up over the poster, its grouped table on pinstripes. */
+  .event {
+    position: fixed; inset: auto 0 0; width: min(100%, 420px); max-width: none; height: min(100svh - var(--sbh), 640px); max-height: none;
+    margin: 0 auto; padding: 0; overflow: hidden; border: 0; border-radius: 10px 10px 0 0; color: #000;
+    background: repeating-linear-gradient(90deg, #c5ccd4 0 4px, #cbd2d9 4px 7px);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: none; letter-spacing: 0;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, .35);
+    translate: 0 100%;
+    transition: translate .45s var(--ease-entrada), display .45s allow-discrete, overlay .45s allow-discrete;
+  }
+  .event[open] { display: grid; grid-template-rows: auto 1fr; translate: 0 0; }
+  @starting-style { .event[open] { translate: 0 100%; } }
+  .event::backdrop { background: rgba(0, 0, 0, 0); transition: background-color .45s, display .45s allow-discrete, overlay .45s allow-discrete; }
+  .event[open]::backdrop { background: rgba(0, 0, 0, .45); }
+  @starting-style { .event[open]::backdrop { background: rgba(0, 0, 0, 0); } }
+
+  .ev-nav {
+    position: relative; display: grid; place-items: center; height: 44px; margin: 0; border-bottom: 1px solid #2d3642; color: #fff;
+    background: linear-gradient(#b0bccd, #889bb3 50%, #8195af 51%, #6d84a2); font-size: 20px; text-shadow: 0 -1px 0 rgba(0, 0, 0, .45);
+  }
+  .ev-back {
+    position: absolute; left: 6px; top: 7px; padding: 7px 10px 7px 15px; border: 1px solid #3b4b63; border-radius: 6px; color: #fff; cursor: pointer;
+    font: 700 12px/1 'Helvetica Neue', Helvetica, Arial, sans-serif; text-shadow: 0 -1px 0 rgba(0, 0, 0, .45);
+    clip-path: polygon(10px 0, 100% 0, 100% 100%, 10px 100%, 0 50%);
+    background: linear-gradient(#91a3bc, #6c83a5 50%, #5a7397 51%, #5d7699); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35);
+  }
+  .ev-back:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+  .ev-body { overflow-y: auto; padding: 18px 10px 90px; }
+  .group {
+    margin: 0 0 18px; padding: 0; list-style: none; overflow: hidden;
+    background: #fff; border: 1px solid #a8acb2; border-radius: 10px; box-shadow: 0 1px 0 rgba(255, 255, 255, .8);
+  }
+  .ev-head { padding: 12px 12px 14px; }
+  .ev-head h2 { margin: 0; font-size: 19px; line-height: 1.2; }
+  .ev-head p { margin: 0; font-size: 15px; }
+  .ev-head .venue { margin-bottom: 14px; color: #555; }
+  .ev-head .day { font-weight: 700; }
+  .ev-head .hour { color: #385487; font-weight: 700; }
+  .group li + li { border-top: 1px solid #dcdcdc; }
+  .row { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; font-size: 16px; font-weight: 700; }
+  .val { color: #385487; font-size: 15px; font-weight: 400; }
+  /* A row being touched turns iOS blue. */
+  a.row:hover, a.row:focus-visible { background: linear-gradient(#058cf5, #015fe6); color: #fff; outline: none; }
+  a.row:hover .val, a.row:focus-visible .val { color: #fff; }
+  .row.add { justify-content: center; color: #385487; }
+  .foot { margin: 0; color: #4c566c; font-size: 14px; text-align: center; text-shadow: 0 1px 0 rgba(255, 255, 255, .7); }
 
   /* The title lights up like a sign (one flicker, no strobing), then the dates come in one by one,
      like a setlist; the picture settles behind them. */
@@ -69,6 +157,7 @@ const { tour } = site;
     .sub { animation: sign-on 1.1s .45s linear both; }
     .dates li { animation: band-in var(--dur-media) var(--ease-entrada) both; animation-delay: calc(.8s + var(--i) * 90ms); }
   }
+  @media (prefers-reduced-motion: reduce) { .event, .event::backdrop { transition: none; } }
   @keyframes poster-in { from { scale: 1.08; filter: brightness(.6); } }
   @keyframes sign-on { 0% { opacity: 0; } 30% { opacity: .9; } 40% { opacity: .35; } 60%, 100% { opacity: 1; } }
   @keyframes band-in { from { opacity: 0; translate: 24px 0; clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
@@ -79,3 +168,19 @@ const { tour } = site;
     .board { right: auto; left: 16px; top: auto; bottom: 96px; translate: none; }
   }
 </style>
+
+<script>
+  import { onPage } from '../scripts/page';
+  import { lenis } from '../scripts/transitions';
+
+  // A date opens its event; a click on the dim around the sheet closes it, as Esc and "Fechas" do.
+  onPage(signal => {
+    document.querySelectorAll<HTMLButtonElement>('.band[data-event]').forEach(band => {
+      const sheet = document.getElementById(band.dataset.event!) as HTMLDialogElement | null;
+      if (!sheet) return;
+      band.addEventListener('click', () => { sheet.showModal(); lenis?.stop(); }, { signal });
+      sheet.addEventListener('click', e => { if (e.target === sheet) sheet.close(); }, { signal });
+      sheet.addEventListener('close', () => { lenis?.start(); }, { signal });
+    });
+  });
+</script>
