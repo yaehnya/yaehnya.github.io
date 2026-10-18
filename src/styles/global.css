@@ -1,6 +1,11 @@
 @import '@fontsource-variable/inter-tight';
 @import '@fontsource-variable/cinzel';
 
+/* Helvetica Neue, the iPhone's type (iOS 4 used it everywhere: status bar, bars, lists, Cover Flow).
+   The computer's own where it has it (Mac); elsewhere the copy here (Latin only, public/fonts/). */
+@font-face { font-family: 'Helvetica Neue'; font-weight: 400; font-display: swap; src: local('Helvetica Neue'), local('HelveticaNeue'), url('/fonts/helvetica-neue-regular.woff2') format('woff2'); }
+@font-face { font-family: 'Helvetica Neue'; font-weight: 700; font-display: swap; src: local('Helvetica Neue Bold'), local('HelveticaNeue-Bold'), url('/fonts/helvetica-neue-bold.woff2') format('woff2'); }
+
 :root {
   --bg: #ffffff;
   --panel: #f0f0f0;              /* the references' light grey, behind photos */

@@ -119,7 +119,7 @@ const place = (d: number) => d === 0
   .lockup {
     --end-scale: .55;                                        /* its size once it has risen */
     position: absolute; left: 50%; top: 50%; z-index: 1; margin: 0; white-space: nowrap;
-    font-size: clamp(80px, 13vw, 220px); translate: -50% calc(-50% - 40svh); scale: var(--end-scale);
+    font-size: clamp(80px, 13vw, 30svh); translate: -50% calc(-50% - 40svh); scale: var(--end-scale);
   }
   @media (max-width: 760px) { .lockup { --end-scale: .85; } }
   .lockup .wm {
@@ -130,7 +130,7 @@ const place = (d: number) => d === 0
 
   /* The phone: the photo of it (498 × 926), sized by height, sitting on the page with a soft shadow. */
   .phone {
-    --h: min(66svh, 620px, 165vw);
+    --h: min(66svh, 165vw);
     position: absolute; left: 50%; top: 57svh; z-index: 1; width: calc(var(--h) * 498 / 926); height: var(--h); translate: -50% -50%;
   }
   .case { position: absolute; inset: 0; }

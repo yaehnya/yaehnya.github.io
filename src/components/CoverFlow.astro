@@ -177,11 +177,12 @@ const year = (iso?: string) => iso?.slice(0, 4);
   }
 
   .caption {
-    display: grid; justify-items: center; align-content: start; gap: .15em; min-height: 2.6em; margin: calc(var(--s) * -.52) 16px 0;
-    position: relative; z-index: 1; text-align: center; font-weight: 700; letter-spacing: -.01em;
-    font-size: 15px; line-height: 1.2; transition: opacity .2s;
+    /* Under the cover, over its reflection, as on the iPod: the title in bold, the artist in grey. */
+    display: grid; justify-items: center; align-content: start; gap: 1px; min-height: 34px; margin: calc(var(--s) * -.36) 16px 0;
+    position: relative; z-index: 1; text-align: center; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 700; font-size: 14px; line-height: 17px; letter-spacing: 0; transition: opacity .2s;
   }
-  .caption span { color: #4a4a4a; font-size: .86em; }
+  .caption span { color: #6d6d6d; font-size: 12px; line-height: 15px; }
 
   /* Arriving from the intro, whose phone screen came up into this: the covers land, a touch too
      close at first, and settle; the caption follows. */

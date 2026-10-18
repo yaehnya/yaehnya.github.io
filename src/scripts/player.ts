@@ -12,6 +12,7 @@ export const library: Track[] = site.songs.filter(s => s.audio).map(s => ({ src:
 
 export const player = new Audio();
 player.preload = 'none';
+player.volume = .8;                                  // the whole site a little quieter than full
 
 let track: Track | null = null;
 let shuffled = false;

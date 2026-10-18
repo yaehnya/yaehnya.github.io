@@ -31,7 +31,7 @@ function load(a: AudioContext, name: Name) {
   return buffers.get(name)!;
 }
 
-async function play(name: Name, gain = .7) {
+async function play(name: Name, gain = .56) {
   if (!on || (!touched() && !ctx)) return;
   ctx ??= new AudioContext();
   if (ctx.state === 'suspended') ctx.resume();
@@ -54,7 +54,7 @@ export const unlock = () => play('unlock');
 /** The sleep button. */
 export const lock = () => play('lock');
 /** A key on the keyboard. */
-export const tick = () => play('tock', .5);
+export const tick = () => play('tock', .4);
 /** A message going. */
 export const swoosh = () => play('sent');
 /** A message arriving, in the conversation. */

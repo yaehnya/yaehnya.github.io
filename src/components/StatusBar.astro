@@ -18,8 +18,9 @@
   <span class="sb-time" aria-hidden="true"></span>
   <span class="sb-r" aria-hidden="true">
     <svg class="sb-play" viewBox="0 0 10 10" hidden><path d="M2 1v8l7-4z" /></svg>
-    <span class="pct">100 %</span>
-    <span class="batt"><i></i><svg class="bolt" viewBox="0 0 10 12" hidden><path d="M6 0 1 7h3l-1 5 5-7H5z" /></svg></span>
+    <span class="pct">100%</span>
+    <svg class="bolt" viewBox="0 0 8 13" hidden><path d="M5.2 0 .4 7.2h3L2.6 13l5-7.4h-3z" /></svg>
+    <span class="batt"><i></i></span>
   </span>
 </button>
 
@@ -56,16 +57,16 @@
   .sb-time { justify-self: center; }
   .sb-r { display: flex; justify-content: end; align-items: center; gap: 5px; }
   .sb-play { width: 9px; height: 9px; fill: currentColor; }
-  .pct { font-weight: 600; }
-  /* The battery: an outline with its nub, filled to the level, with a gloss across the fill. */
-  .batt { position: relative; width: 24px; height: 11px; border: 1px solid currentColor; border-radius: 2.5px; }
-  .batt::after { content: ''; position: absolute; right: -3.5px; top: 2.5px; width: 2.5px; height: 4px; background: currentColor; border-radius: 0 1px 1px 0; }
+  /* As iOS 4 drew it: the percentage close up against the battery; the battery a thin outline with its
+     nub, filled in the bar's own colour to the level, a faint gloss on top; charging, a bolt beside it. */
+  .sb-r { gap: 3px; }
+  .batt { position: relative; width: 23px; height: 11px; margin-right: 3px; border: 1px solid currentColor; border-radius: 2px; opacity: .95; }
+  .batt::after { content: ''; position: absolute; right: -3px; top: 2.5px; width: 2px; height: 4px; background: currentColor; border-radius: 0 1px 1px 0; }
   .batt i {
-    position: absolute; left: 1px; top: 1px; bottom: 1px; width: calc((100% - 2px) * var(--level, 1)); border-radius: 1px;
-    background: linear-gradient(rgba(255, 255, 255, .45), transparent 55%), currentColor;
+    position: absolute; left: 1px; top: 1px; bottom: 1px; width: calc((100% - 2px) * var(--level, 1)); border-radius: .5px;
+    background: linear-gradient(rgba(255, 255, 255, .35), rgba(255, 255, 255, 0) 50%), currentColor;
   }
-  .batt.charging i { background: linear-gradient(rgba(255, 255, 255, .5), transparent 55%), #4cd964; }
-  .bolt { position: absolute; left: 50%; top: 50%; width: 8px; height: 10px; translate: -50% -50%; fill: currentColor; stroke: rgba(0, 0, 0, .35); stroke-width: .6; }
+  .bolt { width: 7px; height: 11px; fill: currentColor; }
 </style>
 
 <script>
@@ -89,10 +90,9 @@
   nav.getBattery?.().then(b => {
     const pct = bar.querySelector('.pct')!, batt = bar.querySelector<HTMLElement>('.batt')!;
     const show = () => {
-      pct.textContent = `${Math.round(b.level * 100)} %`;
+      pct.textContent = `${Math.round(b.level * 100)}%`;
       batt.style.setProperty('--level', String(b.level));
-      batt.classList.toggle('charging', b.charging);
-      batt.querySelector('.bolt')!.toggleAttribute('hidden', !b.charging);
+      bar.querySelector('.bolt')!.toggleAttribute('hidden', !b.charging);
     };
     show();
     b.addEventListener('levelchange', show);

@@ -34,6 +34,8 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
     <title>{fullTitle}</title>
     <Meta title={fullTitle} description={description} image={image} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preload" href="/fonts/helvetica-neue-bold.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/helvetica-neue-regular.woff2" as="font" type="font/woff2" crossorigin />
     <ClientRouter />
     <slot name="head" />
   </head>
