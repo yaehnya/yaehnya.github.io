@@ -201,6 +201,7 @@ const year = (iso?: string) => iso?.slice(0, 4);
   // turn the covers from here.
   import { player, playTrack, nowPlaying } from '../scripts/player';
   import { onPage } from '../scripts/page';
+  import { tick } from '../scripts/sounds';
 
   onPage(signal => {
     for (const flow of document.querySelectorAll<HTMLElement>('.coverflow')) {
@@ -237,6 +238,7 @@ const year = (iso?: string) => iso?.slice(0, 4);
         const i = current();
         if (i === shown) return;
         shown = i;
+        tick();                                        // the iPod's click as each cover passes
         unflip();
         caption.classList.add('changing');
         clearTimeout(swap);

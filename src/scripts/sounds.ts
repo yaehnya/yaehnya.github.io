@@ -37,7 +37,7 @@ function noise(a: AudioContext, at: number, length: number, freq: number, q: num
   return { bp, g, src };
 }
 
-export function vibrate(ms = 12) { if (buzz) navigator.vibrate?.(ms); }
+export function vibrate(ms = 12) { if (buzz && navigator.userActivation?.hasBeenActive) navigator.vibrate?.(ms); }
 
 /** The home button: a soft, low click. */
 export function click() {
