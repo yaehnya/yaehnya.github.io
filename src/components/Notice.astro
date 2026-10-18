@@ -1,0 +1,98 @@
+---
+// Once a visit, an iOS 4 push notification: the navy glass alert in the middle of the screen, the app's
+// name, the news, and two buttons. Here the news is the latest song, and "Escuchar" plays it. It waits
+// until the visitor has been on the site a few seconds (and is past the intro), stays out of the iPod's
+// way (Música already plays it), and never comes back in the same visit.
+import { site } from '../data/site';
+const song = site.songs.find(s => s.audio);
+---
+
+{song && (
+  <div class="notice" role="alertdialog" aria-labelledby="notice-t" aria-describedby="notice-d" hidden data-src={song.audio} data-title={song.title}>
+    <p class="n-app" id="notice-t">{site.name}</p>
+    <p class="n-text" id="notice-d">Nuevo sencillo: «{song.title}». Ya está aquí.</p>
+    <div class="n-buttons">
+      <button type="button" data-n="close">Cerrar</button>
+      <button type="button" data-n="play">Escuchar</button>
+    </div>
+  </div>
+)}
+
+<style>
+  .notice {
+    position: fixed; left: 50%; top: 42%; z-index: 140; width: min(284px, calc(100vw - 32px)); padding: 16px 14px 14px; overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, .85); border-radius: 11px; color: #fff; text-align: center;
+    background: linear-gradient(rgba(57, 72, 113, .94), rgba(20, 31, 66, .96));
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .35), 0 14px 40px rgba(10, 20, 50, .4);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: none; letter-spacing: 0; text-shadow: 0 -1px 0 rgba(0, 0, 0, .55);
+    translate: -50% -50%;
+  }
+  .notice[hidden] { display: none; }
+  /* The gloss across the top half of the glass. */
+  .notice::before {
+    content: ''; position: absolute; left: -30%; right: -30%; top: -120px; height: 160px; pointer-events: none;
+    border-radius: 50%; background: linear-gradient(rgba(255, 255, 255, .34), rgba(255, 255, 255, .08));
+  }
+  .n-app { position: relative; margin: 0 0 4px; font-size: 17px; font-weight: 700; }
+  .n-text { position: relative; margin: 0 0 14px; font-size: 15px; line-height: 1.3; }
+  .n-buttons { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .n-buttons button {
+    padding: 9px 8px; border: 1px solid rgba(0, 0, 0, .55); border-radius: 6px; color: #fff; cursor: pointer;
+    font: 700 16px/1 'Helvetica Neue', Helvetica, Arial, sans-serif; text-shadow: inherit; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45);
+    background: linear-gradient(rgba(140, 152, 182, .9), rgba(66, 79, 115, .95) 50%, rgba(46, 58, 94, .95) 51%, rgba(56, 70, 108, .95));
+  }
+  .n-buttons [data-n='play'] { background: linear-gradient(rgba(170, 182, 210, .95), rgba(92, 106, 146, .95) 50%, rgba(70, 84, 124, .95) 51%, rgba(82, 97, 138, .95)); }
+  .n-buttons button:hover { filter: brightness(1.12); }
+  .n-buttons button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+  /* It pops in as iOS's alerts did: a little too big, then settling. */
+  @media (prefers-reduced-motion: no-preference) {
+    .notice.in { animation: alert-in .42s cubic-bezier(.2, 1.3, .4, 1) both; }
+    .notice.out { animation: alert-out .2s ease-in both; }
+  }
+  @keyframes alert-in { from { opacity: 0; scale: 1.25; } 60% { opacity: 1; } }
+  @keyframes alert-out { to { opacity: 0; scale: .9; } }
+</style>
+
+<script>
+  import { onPage } from '../scripts/page';
+  import { ding, vibrate } from '../scripts/sounds';
+  import { player, playTrack } from '../scripts/player';
+
+  const KEY = 'yeyo-aviso';
+  const seen = () => { try { return !!sessionStorage.getItem(KEY); } catch { return true; } };
+  let timer = 0;
+
+  onPage(signal => {
+    const box = document.querySelector<HTMLElement>('.notice');
+    clearTimeout(timer);
+    if (!box || seen()) return;
+    const close = () => {
+      if (box.hidden) return;
+      box.classList.replace('in', 'out');
+      setTimeout(() => { box.hidden = true; box.classList.remove('out'); }, 200);
+    };
+    const show = () => {
+      const html = document.documentElement;
+      // Not over the intro, the springboard or the iPod, and not while something already plays.
+      if (html.hasAttribute('data-intro') || html.classList.contains('sb-open') || document.body.dataset.page === 'musica' || !player.paused) {
+        timer = window.setTimeout(show, 4000);
+        return;
+      }
+      try { sessionStorage.setItem(KEY, '1'); } catch {}
+      box.hidden = false;
+      box.classList.add('in');
+      ding();
+      vibrate(30);
+      box.querySelector<HTMLElement>('[data-n="play"]')?.focus({ preventScroll: true });
+    };
+    timer = window.setTimeout(show, 9000);
+    signal.addEventListener('abort', () => clearTimeout(timer));
+    box.addEventListener('click', e => {
+      const b = (e.target as Element).closest<HTMLElement>('[data-n]');
+      if (!b) return;
+      if (b.dataset.n === 'play') playTrack(box.dataset.src!, box.dataset.title!);
+      close();
+    }, { signal });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); }, { signal });
+  });
+</script>

@@ -146,7 +146,7 @@ const first = site.contact[0];
 <script>
   import '../scripts/mailto-forms';
   import { onPage } from '../scripts/page';
-  import { tick, swoosh, vibrate } from '../scripts/sounds';
+  import { tick, swoosh, vibrate, ding } from '../scripts/sounds';
 
   onPage(signal => {
     const form = document.querySelector<HTMLFormElement>('.phone-sms');
@@ -155,6 +155,10 @@ const first = site.contact[0];
     // The status bar and the thread's stamp show the real time.
     const now = new Date(), hh = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
     form.querySelectorAll('.clock').forEach(el => { el.textContent = hh; });
+
+    // Yeyo's message arrives as the page opens: it pops in, with the phone's chime.
+    const first = form.querySelector('.thread .in');
+    if (first) { first.classList.add('new'); const t = setTimeout(ding, 380); signal.addEventListener('abort', () => clearTimeout(t)); }
 
     // The keyboard ticks as you type, as the iPhone's did.
     form.addEventListener('input', e => { if ((e as InputEvent).inputType?.startsWith('insert') || (e as InputEvent).inputType?.startsWith('delete')) tick(); }, { signal });

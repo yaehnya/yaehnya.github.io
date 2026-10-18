@@ -10,6 +10,7 @@ import StatusBar from '../components/StatusBar.astro';
 import HomeButton from '../components/HomeButton.astro';
 import Springboard from '../components/Springboard.astro';
 import NowPlaying from '../components/NowPlaying.astro';
+import Notice from '../components/Notice.astro';
 import { site, type Page } from '../data/site';
 
 interface Props {
@@ -42,6 +43,7 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
       <slot />
     </div>
     <NowPlaying />
+    <Notice />
     <Springboard page={page} />
     <HomeButton />
   </body>

@@ -1,7 +1,7 @@
 // The iPhone's little noises, made here with Web Audio (no recordings): the home button's click, the
-// lock's, the keyboard's tick and the swoosh of a sent message. Quiet, only after the visitor has touched
-// something (browsers allow sound only then), and silenced from Ajustes in the springboard. On Android a
-// tap can also buzz (navigator.vibrate); iPhones ignore it.
+// lock's, the keyboard's tick, the swoosh of a sent message and the chime of one arriving. Quiet, only
+// after the visitor has touched something (browsers allow sound only then), and silenced from Ajustes in
+// the springboard. On Android a tap can also buzz (navigator.vibrate); iPhones ignore it.
 
 const KEY = 'yeyo-sonidos';
 let ctx: AudioContext | null = null;
@@ -69,4 +69,18 @@ export function swoosh() {
   g.gain.setValueAtTime(0, t);
   g.gain.linearRampToValueAtTime(.5, t + .08);
   g.gain.exponentialRampToValueAtTime(.001, t + .48);
+}
+
+/** A message or a notification arriving: two soft, bright notes. */
+export function ding() {
+  const a = audio(); if (!a) return;
+  [[1318.5, 0], [1760, .11]].forEach(([f, d]) => {
+    const o = a.createOscillator(), g = a.createGain(), t = a.currentTime + d;
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.14, t + .01);
+    g.gain.exponentialRampToValueAtTime(.001, t + .45);
+    o.connect(g).connect(a.destination);
+    o.start(t); o.stop(t + .5);
+  });
 }
