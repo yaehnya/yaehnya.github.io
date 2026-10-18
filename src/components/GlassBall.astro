@@ -1,11 +1,11 @@
 ---
-// A small glass sphere: an SVG one (Fresnel edge, caustic, highlight, rim), which in Chromium, once
-// the page is idle, scripts/glass.ts swaps for liquid-glass-react's (GlassOrb in Glass.tsx).
+// A small glass sphere drawn in SVG (Fresnel edge, caustic, highlight, rim): the game's ball, on its
+// "Jugar" button.
 interface Props { size?: number; id?: string }
 const { size = 56, id = 'gb' } = Astro.props;
 ---
 
-<span class="ball" style={`--size: ${size}px`} data-glass-orb={size}>
+<span class="ball" style={`--size: ${size}px`}>
   <svg class="face" viewBox="0 0 48 48" aria-hidden="true">
     <defs>
       <radialGradient id={`${id}-body`} cx="50%" cy="50%" r="50%">
@@ -34,10 +34,6 @@ const { size = 56, id = 'gb' } = Astro.props;
     <circle cx="24" cy="24" r="21.6" fill="none" stroke={`url(#${id}-rim)`} stroke-width="1" />
   </svg>
 </span>
-
-<script>
-  import '../scripts/glass';
-</script>
 
 <style>
   .ball { position: relative; display: inline-block; width: var(--size); height: var(--size); }

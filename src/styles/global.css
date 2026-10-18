@@ -24,8 +24,10 @@
   --ease-enfasis: cubic-bezier(.65, 0, .35, 1);    /* a turn: even both ways */
   /* A drop that overshoots a little and settles. */
   --bounce: linear(0, .08 4%, .32 12%, .62 22%, .88 33%, 1.03 43%, 1.055 49%, 1.04 56%, 1.005 66%, .99 74%, .998 86%, 1);
+  --sbh: 20px;                                     /* iOS 4's status bar */
   color-scheme: light;
 }
+@media (min-width: 900px) { :root { --sbh: 22px; } }
 
 *, *::before, *::after { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -52,68 +54,47 @@ a { color: inherit; text-decoration: none; }
 
 .label { font: 400 11px/1.4 var(--sans); letter-spacing: .14em; text-transform: uppercase; }
 
-/* Inner pages: room under the toolbar, a wordmark heading. */
-.page { min-height: 100svh; padding: 110px 24px 120px; }
+/* Inner pages: room under the status bar and above the home button, a wordmark heading. */
+.page { min-height: 100svh; padding: calc(var(--sbh) + 76px) 24px 120px; }
 .page > .wordmark { margin-bottom: 72px; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 @media (prefers-reduced-motion: no-preference) {
+  /* Only for going to and from the game, a page of its own; the rest move without reloading. */
   @view-transition { navigation: auto; }
   /* Inner pages: the title comes into focus, as YEYO does in the intro. */
   .page > .wordmark { animation: title-in var(--dur-larga) var(--ease-entrada) both; }
 }
 @keyframes title-in { from { opacity: 0; filter: blur(10px); scale: 1.05; } }
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: .35s; }
+
+/* Page to page, as iOS 4 moved between screens (scripts/transitions.ts). Forward, the new page pushes
+   in from the right and the old one goes out to the left; back, the other way. The status bar, the home
+   button and what's playing have names of their own, so they stay put. */
+::view-transition-group(root) { animation-duration: .42s; }
+html[data-astro-transition='forward']::view-transition-old(root) { animation: push-out-left .42s cubic-bezier(.45, 0, .2, 1) both; }
+html[data-astro-transition='forward']::view-transition-new(root) { animation: push-in-right .42s cubic-bezier(.45, 0, .2, 1) both; }
+html[data-astro-transition='back']::view-transition-old(root) { animation: push-out-right .42s cubic-bezier(.45, 0, .2, 1) both; }
+html[data-astro-transition='back']::view-transition-new(root) { animation: push-in-left .42s cubic-bezier(.45, 0, .2, 1) both; }
+@keyframes push-in-right { from { transform: translateX(100%); } }
+@keyframes push-out-left { to { transform: translateX(-100%); } }
+@keyframes push-in-left { from { transform: translateX(-100%); } }
+@keyframes push-out-right { to { transform: translateX(100%); } }
+
+/* From the springboard, the app opens out of its icon (--lx, --ly: the icon's centre; --ls: its size
+   against the screen) while the home screen behind it flies apart. */
+html[data-launch]::view-transition-new(root) {
+  transform-origin: var(--lx) var(--ly);
+  animation: app-open .5s cubic-bezier(.2, .75, .25, 1) both;
+}
+html[data-launch]::view-transition-old(root) { animation: home-apart .5s cubic-bezier(.4, 0, .6, 1) both; }
+@keyframes app-open { from { transform: scale(var(--ls)); opacity: 0; } 35% { opacity: 1; } }
+@keyframes home-apart { to { transform: scale(1.7); opacity: 0; } }
+
 /* What travels from page to page (a cover into the music page) moves as a turn does. */
 ::view-transition-group(*) { animation-duration: var(--dur-larga); animation-timing-function: var(--ease-enfasis); }
+::view-transition-group(statusbar), ::view-transition-group(home-button), ::view-transition-group(now-playing) { animation-duration: .42s; }
 
-/* Liquid glass (src/components/Glass.tsx). liquid-glass-react styles a few of its layers with Tailwind
-   class names; these are the ones it uses. */
-.lg { position: relative; display: block; }
-.lg .relative { position: relative; }
-.lg .bg-black { background: #000; }
-.lg .opacity-0 { opacity: 0; }
-.lg .opacity-20 { opacity: .07; }   /* the tint it puts under glass on a light page; .2 greys the white page */
-.lg .opacity-100 { opacity: 1; }
-/* Its other tint blends in overlay with what is behind, but inside a fixed bar (its own stacking
-   context) there is nothing behind it to blend with and it turns solid black; leave it out. */
-.lg .mix-blend-overlay { display: none; }
-/* The glass blurs and bends what is painted under it, its own shadow included, so on a white page its
-   shadow turns it grey. The shadow goes on top instead, outside the glass only (an outer box-shadow of
-   a transparent ring). */
-.lg .glass { box-shadow: none !important; }
-.lg::after {
-  content: ''; position: absolute; inset: 0; border-radius: 999px; pointer-events: none;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, .14), 0 1px 3px rgba(0, 0, 0, .12);
-}
-.lg .pointer-events-none { pointer-events: none; }
-.lg .cursor-pointer { cursor: pointer; }
-.lg .transition-all { transition: all .15s ease-in-out; }
-.lg .text-white { color: inherit; }
-.lg-face { display: grid; place-items: center; }
-
-/* The light on a glass marble (GlassOrb): a darker Fresnel edge, a caustic low on the far side and a
-   highlight up on the near side, over the library's glass. */
-.orb {
-  display: block; border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 26%, #fff 0, rgba(255, 255, 255, .9) 7%, transparent 20%),
-    radial-gradient(circle at 62% 78%, rgba(255, 255, 255, .85) 0, transparent 28%),
-    radial-gradient(circle at 50% 45%, transparent 38%, rgba(170, 180, 196, .45) 78%, rgba(110, 120, 138, .75) 100%);
-  box-shadow: inset 0 -3px 6px rgba(80, 90, 110, .25), inset 0 2px 3px rgba(255, 255, 255, .9);
-}
-
-/* The light on a drop of glass (the social logos, the caption's pill): on a white page there is little
-   behind it to bend, so the glass shows by its own light, as iOS's does on white: a bright rim along
-   the top, a sheen falling from it, the lower edge darkened by what it refracts, and a faint cool tint. */
-.sheen {
-  display: grid; place-items: center; width: 100%; height: 100%; border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, .5), rgba(255, 255, 255, .08) 34%, rgba(255, 255, 255, 0) 55%, rgba(255, 255, 255, .2)),
-    rgba(226, 233, 243, .1);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 0 rgba(255, 255, 255, .55),
-    inset 0 0 0 1px rgba(255, 255, 255, .35), inset 0 0 0 .5px rgba(60, 70, 90, .14),
-    inset 2px 5px 9px -5px rgba(255, 255, 255, .95), inset -3px -7px 12px -6px rgba(40, 50, 70, .2);
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
 }

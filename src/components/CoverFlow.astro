@@ -16,7 +16,7 @@ const year = (iso?: string) => iso?.slice(0, 4);
 ---
 
 <section class="coverflow" aria-label="Fotos, música y noticias">
-  <div class="scroller" tabindex="0" data-start={start}>
+  <div class="scroller" tabindex="0" data-start={start} data-lenis-prevent>
     <ul class="flow">
       {items.map((c, i) => {
         const near = Math.abs(i - start) < 4;
@@ -200,140 +200,144 @@ const year = (iso?: string) => iso?.slice(0, 4);
   // middle one over, play songs from the backs, and (for browsers without scroll-driven animations)
   // turn the covers from here.
   import { player, playTrack, nowPlaying } from '../scripts/player';
+  import { onPage } from '../scripts/page';
 
-  for (const flow of document.querySelectorAll<HTMLElement>('.coverflow')) {
-    const scroller = flow.querySelector<HTMLElement>('.scroller')!;
-    const items = [...scroller.querySelectorAll<HTMLLIElement>('li')];
-    const caption = flow.querySelector<HTMLElement>('.caption')!;
-    const native = CSS.supports('(animation-timeline: view()) and (animation-range: entry)');
+  onPage(signal => {
+    for (const flow of document.querySelectorAll<HTMLElement>('.coverflow')) {
+      const scroller = flow.querySelector<HTMLElement>('.scroller')!;
+      const items = [...scroller.querySelectorAll<HTMLLIElement>('li')];
+      const caption = flow.querySelector<HTMLElement>('.caption')!;
+      const native = CSS.supports('(animation-timeline: view()) and (animation-range: entry)');
 
-    const centreOf = (el: HTMLElement) => el.offsetLeft + el.offsetWidth / 2;
-    const middle = () => scroller.scrollLeft + scroller.clientWidth / 2;
-    const current = () => {
-      let best = 0, bd = Infinity;
-      items.forEach((li, i) => { const d = Math.abs(centreOf(li) - middle()); if (d < bd) { bd = d; best = i; } });
-      return best;
-    };
-    const go = (i: number, smooth = true) => {
-      const li = items[Math.max(0, Math.min(items.length - 1, i))];
-      scroller.scrollTo({ left: centreOf(li) - scroller.clientWidth / 2, behavior: smooth ? 'smooth' : 'instant' });
-    };
+      const centreOf = (el: HTMLElement) => el.offsetLeft + el.offsetWidth / 2;
+      const middle = () => scroller.scrollLeft + scroller.clientWidth / 2;
+      const current = () => {
+        let best = 0, bd = Infinity;
+        items.forEach((li, i) => { const d = Math.abs(centreOf(li) - middle()); if (d < bd) { bd = d; best = i; } });
+        return best;
+      };
+      const go = (i: number, smooth = true) => {
+        const li = items[Math.max(0, Math.min(items.length - 1, i))];
+        scroller.scrollTo({ left: centreOf(li) - scroller.clientWidth / 2, behavior: smooth ? 'smooth' : 'instant' });
+      };
 
-    // Turning a cover over and back. Only its back's controls are reachable while it shows.
-    const flip = (li: HTMLLIElement, on: boolean, focus = false) => {
-      li.classList.toggle('flipped', on);
-      const back = li.querySelector<HTMLElement>('.back')!;
-      back.inert = !on;
-      li.querySelector('.front')!.setAttribute('aria-expanded', String(on));
-      if (focus) (on ? back.querySelector<HTMLElement>('button, a') : li.querySelector<HTMLElement>('.front'))?.focus({ preventScroll: true });
-    };
-    const unflip = () => items.forEach(li => { if (li.classList.contains('flipped')) flip(li, false); });
+      // Turning a cover over and back. Only its back's controls are reachable while it shows.
+      const flip = (li: HTMLLIElement, on: boolean, focus = false) => {
+        li.classList.toggle('flipped', on);
+        const back = li.querySelector<HTMLElement>('.back')!;
+        back.inert = !on;
+        li.querySelector('.front')!.setAttribute('aria-expanded', String(on));
+        if (focus) (on ? back.querySelector<HTMLElement>('button, a') : li.querySelector<HTMLElement>('.front'))?.focus({ preventScroll: true });
+      };
+      const unflip = () => items.forEach(li => { if (li.classList.contains('flipped')) flip(li, false); });
 
-    // The caption: the middle cover's two lines, with a quick fade when it changes.
-    let shown = -1, swap = 0;
-    const label = () => {
-      const i = current();
-      if (i === shown) return;
-      shown = i;
-      unflip();
-      caption.classList.add('changing');
-      clearTimeout(swap);
-      swap = window.setTimeout(() => {
-        caption.querySelector('b')!.textContent = items[i].dataset.title!;
-        caption.querySelector('span')!.textContent = items[i].dataset.subtitle!;
-        caption.classList.remove('changing');
-      }, 140);
-    };
+      // The caption: the middle cover's two lines, with a quick fade when it changes.
+      let shown = -1, swap = 0;
+      const label = () => {
+        const i = current();
+        if (i === shown) return;
+        shown = i;
+        unflip();
+        caption.classList.add('changing');
+        clearTimeout(swap);
+        swap = window.setTimeout(() => {
+          caption.querySelector('b')!.textContent = items[i].dataset.title!;
+          caption.querySelector('span')!.textContent = items[i].dataset.subtitle!;
+          caption.classList.remove('changing');
+        }, 140);
+      };
 
-    // Without scroll-driven animations: the same turn, set from each cover's distance to the middle.
-    const turn = () => {
-      const s = items[0].querySelector<HTMLElement>('.cover')!.offsetWidth, step = items[0].offsetWidth, m = middle();
-      for (const li of items) {
-        const t = Math.max(-1, Math.min(1, (centreOf(li) - m) / step));       // +1: a step right, -1: a step left
-        const a = Math.abs(t), side = Math.sign(t);
-        li.querySelector<HTMLElement>('.cover')!.style.transform =
-          `translateX(${side * a * s * .44}px) translateZ(${(.04 - a * .44) * s}px) rotateY(${-side * a * 70}deg)`;
-      }
-    };
+      // Without scroll-driven animations: the same turn, set from each cover's distance to the middle.
+      const turn = () => {
+        const s = items[0].querySelector<HTMLElement>('.cover')!.offsetWidth, step = items[0].offsetWidth, m = middle();
+        for (const li of items) {
+          const t = Math.max(-1, Math.min(1, (centreOf(li) - m) / step));       // +1: a step right, -1: a step left
+          const a = Math.abs(t), side = Math.sign(t);
+          li.querySelector<HTMLElement>('.cover')!.style.transform =
+            `translateX(${side * a * s * .44}px) translateZ(${(.04 - a * .44) * s}px) rotateY(${-side * a * 70}deg)`;
+        }
+      };
 
-    let frame = 0;
-    scroller.addEventListener('scroll', () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => { label(); if (!native) turn(); });
-    }, { passive: true });
+      let frame = 0;
+      scroller.addEventListener('scroll', () => {
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(() => { label(); if (!native) turn(); });
+      }, { passive: true, signal });
 
-    // A vertical wheel moves one cover at a time.
-    let wheelLock = 0;
-    scroller.addEventListener('wheel', e => {
-      if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;           // a trackpad swiping sideways already scrolls
-      e.preventDefault();
-      if (performance.now() < wheelLock) return;
-      wheelLock = performance.now() + 140;
-      go(current() + Math.sign(e.deltaY));
-    }, { passive: false });
+      // A vertical wheel moves one cover at a time.
+      let wheelLock = 0;
+      scroller.addEventListener('wheel', e => {
+        if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;           // a trackpad swiping sideways already scrolls
+        e.preventDefault();
+        if (performance.now() < wheelLock) return;
+        wheelLock = performance.now() + 140;
+        go(current() + Math.sign(e.deltaY));
+      }, { passive: false, signal });
 
-    // Dragging with the mouse, snapping again on release.
-    let drag: { x: number; left: number; moved: boolean } | null = null;
-    scroller.addEventListener('pointerdown', e => {
-      if (e.pointerType !== 'mouse' || e.button !== 0) return;
-      drag = { x: e.clientX, left: scroller.scrollLeft, moved: false };
-    });
-    addEventListener('pointermove', e => {
-      if (!drag) return;
-      const dx = e.clientX - drag.x;
-      if (!drag.moved && Math.abs(dx) < 4) return;
-      drag.moved = true;
-      scroller.classList.add('dragging');
-      scroller.scrollLeft = drag.left - dx;
-    });
-    addEventListener('pointerup', () => {
-      if (!drag) return;
-      const moved = drag.moved;
-      drag = null;
-      if (moved) { scroller.classList.remove('dragging'); go(current()); scroller.dataset.dragged = '1'; }
-    });
+      // Dragging with the mouse, snapping again on release.
+      let drag: { x: number; left: number; moved: boolean } | null = null;
+      scroller.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'mouse' || e.button !== 0) return;
+        drag = { x: e.clientX, left: scroller.scrollLeft, moved: false };
+      });
+      addEventListener('pointermove', e => {
+        if (!drag) return;
+        const dx = e.clientX - drag.x;
+        if (!drag.moved && Math.abs(dx) < 4) return;
+        drag.moved = true;
+        scroller.classList.add('dragging');
+        scroller.scrollLeft = drag.left - dx;
+      }, { signal });
+      addEventListener('pointerup', () => {
+        if (!drag) return;
+        const moved = drag.moved;
+        drag = null;
+        if (moved) { scroller.classList.remove('dragging'); go(current()); scroller.dataset.dragged = '1'; }
+      }, { signal });
 
-    // A click on a cover at the side brings it to the middle; on the middle one, it turns it over.
-    scroller.addEventListener('click', e => {
-      if (scroller.dataset.dragged) { delete scroller.dataset.dragged; e.preventDefault(); return; }
-      const t = e.target as Element, li = t.closest('li') as HTMLLIElement | null;
-      if (!li) return;
-      const i = items.indexOf(li);
-      if (i !== current()) { e.preventDefault(); unflip(); go(i); return; }
-      const keyboard = (e as MouseEvent).detail === 0;
-      const listen = t.closest<HTMLButtonElement>('.listen');
-      // Going to the song's page: its back travels there and becomes its cover (a view transition).
-      if (t.closest('.more') && li.dataset.song) li.querySelector<HTMLElement>('.back')!.style.viewTransitionName = `portada-${+li.dataset.song + 1}`;
-      if (t.closest('.front')) flip(li, true, keyboard);
-      else if (t.closest('.turn')) flip(li, false, keyboard);
-      else if (listen) {
-        if (nowPlaying()?.src === listen.dataset.src && !player.paused) player.pause();
-        else playTrack(listen.dataset.src!, listen.dataset.title!);
-      }
-    });
+      // A click on a cover at the side brings it to the middle; on the middle one, it turns it over.
+      scroller.addEventListener('click', e => {
+        if (scroller.dataset.dragged) { delete scroller.dataset.dragged; e.preventDefault(); return; }
+        const t = e.target as Element, li = t.closest('li') as HTMLLIElement | null;
+        if (!li) return;
+        const i = items.indexOf(li);
+        if (i !== current()) { e.preventDefault(); unflip(); go(i); return; }
+        const keyboard = (e as MouseEvent).detail === 0;
+        const listen = t.closest<HTMLButtonElement>('.listen');
+        // Going to the song's page: its back travels there and becomes its cover (a view transition).
+        if (t.closest('.more') && li.dataset.song) li.querySelector<HTMLElement>('.back')!.style.viewTransitionName = `portada-${+li.dataset.song + 1}`;
+        if (t.closest('.front')) flip(li, true, keyboard);
+        else if (t.closest('.turn')) flip(li, false, keyboard);
+        else if (listen) {
+          if (nowPlaying()?.src === listen.dataset.src && !player.paused) player.pause();
+          else playTrack(listen.dataset.src!, listen.dataset.title!);
+        }
+      });
 
-    // The backs' play buttons follow the one player (the intro's iPhone plays through it too).
-    const listens = [...scroller.querySelectorAll<HTMLButtonElement>('.listen')];
-    const syncListen = () => listens.forEach(b => {
-      const on = !player.paused && nowPlaying()?.src === b.dataset.src;
-      b.classList.toggle('on', on);
-      b.querySelector('span')!.textContent = on ? 'Pausa' : 'Escuchar';
-    });
-    player.addEventListener('play', syncListen);
-    player.addEventListener('pause', syncListen);
-    addEventListener('yeyo:track', syncListen);
+      // The backs' play buttons follow the one player (the intro's iPhone plays through it too).
+      const listens = [...scroller.querySelectorAll<HTMLButtonElement>('.listen')];
+      const syncListen = () => listens.forEach(b => {
+        const on = !player.paused && nowPlaying()?.src === b.dataset.src;
+        b.classList.toggle('on', on);
+        b.querySelector('span')!.textContent = on ? 'Pausa' : 'Escuchar';
+      });
+      player.addEventListener('play', syncListen, { signal });
+      player.addEventListener('pause', syncListen, { signal });
+      addEventListener('yeyo:track', syncListen, { signal });
+      syncListen();
 
-    // Arrow keys step through the covers.
-    scroller.addEventListener('keydown', e => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); go(current() + (e.key === 'ArrowRight' ? 1 : -1)); }
-      if (e.key === 'Escape') { const li = items.find(l => l.classList.contains('flipped')); if (li) flip(li, false, true); }
-    });
+      // Arrow keys step through the covers.
+      scroller.addEventListener('keydown', e => {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); go(current() + (e.key === 'ArrowRight' ? 1 : -1)); }
+        if (e.key === 'Escape') { const li = items.find(l => l.classList.contains('flipped')); if (li) flip(li, false, true); }
+      });
 
-    // Open on the starting cover; again once the page has loaded, since a reload restores the old
-    // scroll position over it.
-    const begin = () => { go(Number(scroller.dataset.start) || 0, false); if (!native) turn(); shown = current(); };
-    begin();
-    if (document.readyState !== 'complete') addEventListener('load', begin, { once: true });
-    addEventListener('resize', () => { go(shown, false); if (!native) turn(); });
-  }
+      // Open on the starting cover; again once the page has loaded, since a reload restores the old
+      // scroll position over it.
+      const begin = () => { go(Number(scroller.dataset.start) || 0, false); if (!native) turn(); shown = current(); };
+      begin();
+      if (document.readyState !== 'complete') addEventListener('load', begin, { once: true, signal });
+      addEventListener('resize', () => { go(shown, false); if (!native) turn(); }, { signal });
+    }
+  });
 </script>

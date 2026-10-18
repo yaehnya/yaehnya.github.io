@@ -1,0 +1,53 @@
+---
+// The iPhone 4's home button, at the foot of every page: a white concave button with its rounded
+// square. A press opens the springboard, the iPhone's home screen with the site's apps (Springboard
+// .astro); pressed again, it goes back to the page. It clicks (quietly) and, on Android, buzzes.
+---
+
+<button class="home-btn" type="button" transition:persist="home-button" aria-label="Botón de inicio: ver las apps" aria-expanded="false" aria-controls="springboard">
+  <span aria-hidden="true"></span>
+</button>
+
+<style>
+  .home-btn {
+    --d: 52px;
+    position: fixed; left: 50%; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 160; display: grid; place-items: center;
+    width: var(--d); height: var(--d); margin-left: calc(var(--d) / -2); padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    /* White, dished in: lit from above, the lip catching the light, the bowl in a little shadow. */
+    background: radial-gradient(circle at 50% 28%, #fff 0 28%, #efefef 62%, #dadada 100%);
+    box-shadow:
+      inset 0 2px 4px rgba(0, 0, 0, .17), inset 0 -2px 2px rgba(255, 255, 255, .95),
+      0 0 0 1px rgba(0, 0, 0, .08), 0 0 0 4px rgba(255, 255, 255, .75), 0 0 0 5px rgba(0, 0, 0, .05),
+      0 10px 22px rgba(0, 0, 0, .16);
+    view-transition-name: home-button;
+    transition: scale var(--dur-micro) var(--ease-entrada), box-shadow var(--dur-micro);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .home-btn span { width: 29%; height: 29%; border: 1.6px solid #8b8b8b; border-radius: 24%; }
+  .home-btn:hover { scale: 1.04; }
+  .home-btn:active, .home-btn.pressed {
+    scale: .94;
+    box-shadow:
+      inset 0 3px 6px rgba(0, 0, 0, .26), inset 0 -1px 1px rgba(255, 255, 255, .9),
+      0 0 0 1px rgba(0, 0, 0, .1), 0 0 0 4px rgba(255, 255, 255, .75), 0 0 0 5px rgba(0, 0, 0, .05),
+      0 5px 12px rgba(0, 0, 0, .14);
+  }
+  .home-btn:focus-visible { outline: 2px solid #3a76d8; outline-offset: 5px; }
+  :global(html[data-intro]) .home-btn { display: none; }
+  @media (prefers-reduced-motion: no-preference) {
+    :global(html.arriving) .home-btn { animation: home-in .7s .35s var(--ease-entrada) both; }
+  }
+  @keyframes home-in { from { opacity: 0; translate: 0 24px; scale: .8; } }
+  @media (max-width: 760px) { .home-btn { --d: 48px; } }
+</style>
+
+<script>
+  import { click, vibrate } from '../scripts/sounds';
+
+  const btn = document.querySelector<HTMLButtonElement>('.home-btn')!;
+  btn.addEventListener('click', () => {
+    click();
+    vibrate(10);
+    document.dispatchEvent(new CustomEvent('yeyo:home'));
+  });
+</script>

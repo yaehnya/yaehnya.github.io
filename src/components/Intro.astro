@@ -341,8 +341,8 @@ const place = (d: number) => d === 0
     const $ = <T extends Element = HTMLElement>(s: string) => intro.querySelector<T>(s)!;
 
     // While the intro is up, the page behind it is out of reach: no Tab into it, nothing read aloud.
-    const behind = [...document.getElementById('world')!.children, document.querySelector('.social')]
-      .filter((el): el is HTMLElement => !!el && el !== intro);
+    const behind = [...document.getElementById('world')!.children, ...document.querySelectorAll('.statusbar, .home-btn, .now-playing')]
+      .filter((el): el is HTMLElement => el instanceof HTMLElement && el !== intro);
     behind.forEach(el => { el.inert = true; });
 
     // The status bar shows the real time.

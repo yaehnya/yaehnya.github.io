@@ -1,8 +1,15 @@
 ---
+// Every page but the game's. The site is the iPhone 4: iOS 4's status bar across the top, the home
+// button at the foot, and behind it the springboard with the sections as apps. The pages change without
+// reloading (ClientRouter), so the song goes on playing; the status bar, the home button and what's
+// playing stay put while the page under them slides in (transition:persist).
 import '../styles/global.css';
-import Menu from '../components/Menu.astro';
+import { ClientRouter } from 'astro:transitions';
 import Meta from '../components/Meta.astro';
-import Social from '../components/Social.astro';
+import StatusBar from '../components/StatusBar.astro';
+import HomeButton from '../components/HomeButton.astro';
+import Springboard from '../components/Springboard.astro';
+import NowPlaying from '../components/NowPlaying.astro';
 import Bolaweb from '../components/Bolaweb.astro';
 import { site, type Page } from '../data/site';
 
@@ -11,11 +18,11 @@ interface Props {
   description?: string;
   page: Page;
   game?: boolean;        // load the ball game on this page (it starts only from a [data-bolaweb] button)
-  bar?: 'dark' | 'light';  // the top bar's text colour; light on pages that open on a dark picture
+  bar?: 'gris' | 'negro' | 'translucido';   // the status bar: iOS 4's grey; black (the iPod); see-through over a picture
   image?: string;          // the share picture for this page, 1200 × 630 (default: public/og/yeyo.jpg)
 }
 
-const { title, description = site.description, page, game = false, bar = 'dark', image } = Astro.props;
+const { title, description = site.description, page, game = false, bar = 'gris', image } = Astro.props;
 const fullTitle = title ? `${title} — ${site.name}` : site.name;
 ---
 
@@ -23,19 +30,26 @@ const fullTitle = title ? `${title} — ${site.name}` : site.name;
 <html lang="es">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{fullTitle}</title>
     <Meta title={fullTitle} description={description} image={image} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <ClientRouter />
     <slot name="head" />
   </head>
-  <body>
-    <!-- #world is what the ball rolls over; the game's own UI stays outside it. -->
+  <body data-bar={bar} data-page={page}>
+    <StatusBar />
+    <!-- #world is the page: what slides in and out, what shrinks into its icon, what the ball rolls over. -->
     <div id="world">
-      <Menu page={page} tone={bar} />
       <slot />
     </div>
-    <Social tone={bar} />
+    <NowPlaying />
+    <Springboard page={page} />
+    <HomeButton />
     {game && <Bolaweb />}
   </body>
 </html>
+
+<script>
+  import '../scripts/transitions';
+</script>

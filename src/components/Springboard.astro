@@ -1,0 +1,465 @@
+---
+// The menu is the iPhone 4's home screen, iOS 4's springboard: the site's sections as apps on a
+// wallpaper, Yeyo's Spotify, YouTube, Instagram and Apple Music in the glass dock, the page dots.
+//
+// The home button opens it, the way iOS 4 went home: the page shrinks back into its icon while the
+// other icons fly in from the edges and the dock rises. Pressed again (or Esc), the page comes back
+// out of its icon. An app opens as on the phone, out of its icon while the rest fly away (the page
+// change itself, a View Transition: scripts/transitions.ts and global.css). Holding an icon makes
+// them all jiggle, as when you rearranged them; the home button stops it. Ajustes is an app inside:
+// the sounds and the vibration, with iOS 4's switches, and the intro once more.
+import { site, type Page } from '../data/site';
+import { glyphs } from '../data/icons';
+
+interface Props { page: Page }
+const { page } = Astro.props;
+
+const apps: { id: string; href: string; label: string; page?: Page; reload?: boolean; settings?: boolean }[] = [
+  { id: 'coverflow', href: '/', label: 'Cover Flow', page: 'home' },
+  { id: 'musica', href: '/musica', label: 'Música', page: 'musica' },
+  { id: 'fechas', href: '/fechas', label: 'Fechas', page: 'fechas' },
+  { id: 'tienda', href: '/tienda', label: 'Tienda', page: 'tienda' },
+  { id: 'contacto', href: '/contacto', label: 'Contacto', page: 'contacto' },
+  { id: 'juego', href: '/juego', label: 'Juego', page: 'juego', reload: true },   // a page of its own (Wikipedia's)
+  { id: 'ajustes', href: '#ajustes', label: 'Ajustes', settings: true },
+];
+const dock = [
+  { id: 'spotify', label: 'Spotify', href: site.social.spotify },
+  { id: 'youtube', label: 'YouTube', href: site.social.youtube },
+  { id: 'instagram', label: 'Instagram', href: site.social.instagram },
+  { id: 'apple', label: 'Apple Music', href: site.social.apple },
+];
+
+// The calendar icon shows the day, as iOS's did; the script sets today's, this is the build's.
+const now = new Date();
+const weekday = now.toLocaleDateString('es-MX', { weekday: 'long' });
+// While a song plays, its cover is the wallpaper.
+const covers = Object.fromEntries(site.songs.filter(s => s.audio).map(s => [s.audio, s.image]));
+---
+
+<div id="springboard" class="springboard" role="dialog" aria-modal="true" aria-label="Inicio: las apps" hidden
+  data-lenis-prevent data-wall={site.wallpaper.src} data-covers={JSON.stringify(covers)}>
+  <div class="bg" aria-hidden="true">
+    <img class="wall" src={site.wallpaper.src} alt="" width="1000" height="1000" loading="lazy" decoding="async" />
+    <span class="shade"></span>
+  </div>
+
+  <ul class="grid">
+    {apps.map(a => (
+      <li>
+        <a class="app" href={a.href} data-app={a.id} aria-current={page === a.page ? 'page' : undefined}
+          data-astro-reload={a.reload ? '' : undefined} data-settings={a.settings ? '' : undefined}>
+          {a.id === 'fechas'
+            ? <span class="icon t-fechas" aria-hidden="true"><b class="wd">{weekday}</b><b class="day">{now.getDate()}</b></span>
+            : <span class={`icon t-${a.id}`} aria-hidden="true" set:html={glyphs[a.id]} />}
+          <span class="name">{a.label}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <p class="dots" aria-hidden="true"><i class="spot"></i><i class="on"></i></p>
+
+  <nav class="dock" aria-label={`${site.name} en`}>
+    <span class="shelf" aria-hidden="true"></span>
+    <ul>
+      {dock.map(d => (
+        <li>
+          <a class="app" href={d.href} target="_blank" rel="noopener" data-app={d.id}>
+            <span class={`icon t-${d.id}`} aria-hidden="true" set:html={glyphs[d.id]} />
+            <span class="name">{d.label}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+
+  <!-- Ajustes: iOS 4's grouped table on its pinstripes. -->
+  <section class="settings" aria-label="Ajustes" hidden>
+    <header class="navbar"><b>Ajustes</b></header>
+    <div class="table">
+      <ul class="group">
+        <li>
+          <span class="mini t-sonido" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" /><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" /></svg></span>
+          <span class="row-name" id="aj-sonidos">Sonidos</span>
+          <label class="switch">
+            <input type="checkbox" role="switch" data-set="sonidos" aria-labelledby="aj-sonidos" />
+            <span class="track" aria-hidden="true"><span class="on">SÍ</span><span class="knob"></span><span class="off">NO</span></span>
+          </label>
+        </li>
+        <li data-if-vibrate>
+          <span class="mini t-vibrar" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="3.5" width="8" height="17" rx="1.6" fill="#fff" /><path d="M5 8v8M19 8v8M2.5 10v4M21.5 10v4" stroke="#fff" stroke-width="1.6" stroke-linecap="round" /></svg></span>
+          <span class="row-name" id="aj-vibrar">Vibración</span>
+          <label class="switch">
+            <input type="checkbox" role="switch" data-set="vibrar" aria-labelledby="aj-vibrar" />
+            <span class="track" aria-hidden="true"><span class="on">SÍ</span><span class="knob"></span><span class="off">NO</span></span>
+          </label>
+        </li>
+      </ul>
+      <ul class="group">
+        <li><button class="row-btn" type="button" data-set="intro">Ver la intro otra vez <span aria-hidden="true">›</span></button></li>
+      </ul>
+      <p class="foot">Presiona el botón de inicio para salir.</p>
+    </div>
+  </section>
+</div>
+
+<style>
+  .springboard {
+    --ic: clamp(57px, 15.4vw, 76px);                 /* an icon's side: the iPhone 4's 57 points, a bit more on big screens */
+    --home: 52px;                                    /* room for the home button under the dock */
+    position: fixed; inset: 0; z-index: 150; overflow: hidden; color: #fff; background: #000;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; text-transform: none; letter-spacing: 0;
+    -webkit-user-select: none; user-select: none; overscroll-behavior: contain;
+  }
+  .bg, .wall, .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .wall { object-fit: cover; max-width: none; }
+  /* A little shade so the white names read on any picture, as iOS put under the status bar and dock. */
+  .shade { background: linear-gradient(rgba(0, 0, 0, .32), rgba(0, 0, 0, .06) 28%, rgba(0, 0, 0, .08) 62%, rgba(0, 0, 0, .45)); }
+
+  .grid {
+    position: relative; z-index: 2; display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center;
+    row-gap: calc(var(--ic) * .36); width: min(100% - 12px, calc(var(--ic) * 6.2));
+    margin: calc(var(--sbh) + var(--ic) * .3) auto 0; padding: 0; list-style: none;
+  }
+  .app {
+    display: grid; justify-items: center; gap: calc(var(--ic) * .09); width: calc(var(--ic) * 1.32); color: #fff;
+    -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent;
+  }
+  .name {
+    max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+    font-size: calc(var(--ic) * .195); font-weight: 700; line-height: 1.2;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .95), 0 0 1px rgba(0, 0, 0, .7);
+  }
+  .app:focus-visible { outline: none; }
+  .app:focus-visible .icon { outline: 2px solid #fff; outline-offset: 3px; }
+  .app:active .icon { filter: brightness(.55); }        /* iOS darkened the icon under your finger */
+
+  /* An iOS 4 icon: a rounded tile, its glyph, and the gloss, a lit arc across the top half. */
+  .icon {
+    position: relative; display: block; width: var(--ic); height: var(--ic); overflow: hidden; border-radius: 17.5%;
+    background: var(--tile, #888); box-shadow: 0 1px 3px rgba(0, 0, 0, .6), 0 0 0 .5px rgba(0, 0, 0, .3);
+  }
+  .icon :global(svg) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .icon::before {
+    content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), inset 0 -1px 1px rgba(0, 0, 0, .18);
+  }
+  .icon::after {
+    content: ''; position: absolute; left: -30%; right: -30%; top: -54%; height: 104%; z-index: 1; border-radius: 50%; pointer-events: none;
+    background: linear-gradient(rgba(255, 255, 255, .62), rgba(255, 255, 255, .14));
+  }
+  .t-coverflow { --tile: linear-gradient(#4b4b4b, #0b0b0b); }
+  .t-musica { --tile: linear-gradient(#ffb44e, #f7821c 55%, #e8570b); }
+  .t-tienda { --tile: linear-gradient(#66baff, #2079e6 55%, #0b55c7); }
+  .t-contacto { --tile: linear-gradient(#97f36e, #45c32d 55%, #25a516); }
+  .t-juego { --tile: linear-gradient(#fff, #dfe6ef); }
+  .t-ajustes { --tile: linear-gradient(#aab1ba, #5b626b); }
+  .t-spotify { --tile: linear-gradient(#353535, #050505); }
+  .t-youtube { --tile: linear-gradient(#fff, #e2e2e2); }
+  .t-instagram { --tile: linear-gradient(#80583a, #5c3c22); }
+  .t-apple { --tile: linear-gradient(#ff6c88, #fb2e4d 55%, #e2112e); }
+  /* The calendar: white, the weekday on a red band, the date big. */
+  .t-fechas { --tile: linear-gradient(#fff, #ececec); display: grid; grid-template-rows: 28% 1fr; color: #1a1a1a; text-align: center; }
+  .t-fechas .wd {
+    display: grid; place-items: center; background: linear-gradient(#ee6a62, #c9271f); color: #fff; text-transform: capitalize;
+    font-size: calc(var(--ic) * .155); font-weight: 700; text-shadow: 0 -1px 0 rgba(0, 0, 0, .3);
+  }
+  .t-fechas .day { display: grid; place-items: center; font-size: calc(var(--ic) * .52); font-weight: 700; line-height: 1; letter-spacing: -.05em; }
+
+  /* The page dots, with Spotlight's little magnifier first. */
+  .dots {
+    position: absolute; left: 0; right: 0; z-index: 2; bottom: calc(var(--home) + 26px + var(--ic) * 1.55 + 10px);
+    display: flex; justify-content: center; gap: 9px; margin: 0;
+  }
+  .dots i { position: relative; width: 6px; height: 6px; border-radius: 50%; background: rgba(255, 255, 255, .38); }
+  .dots .on { background: #fff; }
+  .dots .spot { background: none; box-shadow: inset 0 0 0 1.3px rgba(255, 255, 255, .55); }
+  .dots .spot::after { content: ''; position: absolute; right: -2px; bottom: -1px; width: 3px; height: 1.3px; background: rgba(255, 255, 255, .55); rotate: 45deg; }
+
+  /* The dock: a glass shelf seen from above, the icons standing on it and mirrored in it. */
+  .dock {
+    position: absolute; left: 50%; bottom: calc(var(--home) + 26px); z-index: 2;
+    width: min(100%, calc(var(--ic) * 6.8)); height: calc(var(--ic) * 1.55); margin-left: calc(min(100%, var(--ic) * 6.8) / -2);
+  }
+  .shelf {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 66%; border-radius: 3px 3px 0 0;
+    background: linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .24) 40%, rgba(255, 255, 255, .14));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 -1px 0 rgba(255, 255, 255, .3);
+    transform: perspective(300px) rotateX(50deg); transform-origin: 50% 100%;
+  }
+  .dock::after {                                    /* the shelf's front edge */
+    content: ''; position: absolute; left: 0; right: 0; bottom: -5px; height: 5px;
+    background: linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, .12)); box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+  }
+  .dock ul { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); justify-items: center; height: 100%; margin: 0; padding: 0; list-style: none; }
+  .dock .app { gap: calc(var(--ic) * .14); }
+  .dock .icon { -webkit-box-reflect: below 2px linear-gradient(transparent 64%, rgba(255, 255, 255, .3)); }
+  .dock .name { position: relative; top: calc(var(--ic) * .02); }
+
+  /* Holding an icon: they all jiggle, each a little out of step. */
+  @media (prefers-reduced-motion: no-preference) {
+    .springboard.jiggle .icon { animation: jiggle .24s ease-in-out infinite alternate; }
+    .springboard.jiggle li:nth-child(2n) .icon { animation-delay: -.12s; animation-duration: .27s; }
+    .springboard.jiggle li:nth-child(3n) .icon { animation-delay: -.07s; animation-duration: .22s; }
+  }
+  @keyframes jiggle { from { rotate: -2.4deg; translate: 0 .4px; } to { rotate: 2.4deg; translate: 0 -.4px; } }
+
+  /* Ajustes. */
+  .settings {
+    position: absolute; inset: 0; z-index: 5; display: grid; grid-template-rows: auto 1fr; padding-top: var(--sbh);
+    color: #000; background: repeating-linear-gradient(90deg, #c5ccd4 0 4px, #cbd2d9 4px 7px); transform-origin: 0 0;
+  }
+  .navbar {
+    display: grid; place-items: center; height: 44px; border-bottom: 1px solid #2d3642; color: #fff;
+    background: linear-gradient(#b0bccd, #889bb3 50%, #8195af 51%, #6d84a2);
+    font-size: 20px; text-shadow: 0 -1px 0 rgba(0, 0, 0, .45);
+  }
+  .table { overflow-y: auto; padding: 20px 10px calc(var(--home) + 60px); }
+  .group {
+    max-width: 480px; margin: 0 auto 20px; padding: 0; list-style: none; overflow: hidden;
+    background: #fff; border: 1px solid #a8acb2; border-radius: 10px; box-shadow: 0 1px 0 rgba(255, 255, 255, .8);
+  }
+  .group li { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 9px; border-top: 1px solid #dcdcdc; font-size: 17px; font-weight: 700; }
+  .group li:first-child { border-top: 0; }
+  .mini { position: relative; display: grid; place-items: center; flex: none; width: 29px; height: 29px; overflow: hidden; border-radius: 6px; box-shadow: 0 0 0 .5px rgba(0, 0, 0, .3); }
+  .mini svg { width: 21px; height: 21px; fill: #fff; }
+  .mini::after { content: ''; position: absolute; left: -30%; right: -30%; top: -54%; height: 104%; border-radius: 50%; background: linear-gradient(rgba(255, 255, 255, .55), rgba(255, 255, 255, .12)); }
+  .t-sonido { background: linear-gradient(#ff6a5c, #d9241a); }
+  .t-vibrar { background: linear-gradient(#a3abb5, #5d6570); }
+  .row-btn {
+    display: flex; justify-content: space-between; align-items: center; width: 100%; min-height: 44px; padding: 0; border: 0; background: none;
+    color: inherit; font: inherit; text-align: left; cursor: pointer;
+  }
+  .row-btn span { color: #8e8e93; font-size: 22px; font-weight: 400; }
+  .foot { margin: 0; color: #4c566c; font-size: 15px; text-align: center; text-shadow: 0 1px 0 rgba(255, 255, 255, .7); }
+
+  /* iOS 4's switch, in Spanish: SÍ in blue, NO in grey, a silver knob sliding between them. */
+  .switch {
+    position: relative; flex: none; margin-left: auto; width: 94px; height: 27px; overflow: hidden; border-radius: 5px; cursor: pointer;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35);
+  }
+  .switch input { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+  .track { position: absolute; top: 0; bottom: 0; left: 0; display: flex; width: 148px; transition: translate .18s ease-out; }
+  .track > span:not(.knob) { width: 54px; font-size: 16px; font-weight: 700; line-height: 27px; text-align: center; box-shadow: inset 0 2px 3px rgba(0, 0, 0, .28); }
+  .track .on { background: linear-gradient(#1e62d6, #3a86f2 50%, #5aa1f6); color: #fff; text-shadow: 0 -1px 0 rgba(0, 0, 0, .35); padding-left: 4px; }
+  .track .off { background: linear-gradient(#e3e3e3, #fcfcfc); color: #7d7d7d; padding-right: 4px; }
+  .knob {
+    position: relative; z-index: 1; flex: none; width: 40px; border-radius: 5px;
+    background: linear-gradient(#fff, #ececec 50%, #d6d6d6 51%, #f3f3f3);
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3), inset 0 1px 0 #fff;
+  }
+  .switch input:not(:checked) + .track { translate: -54px 0; }
+  .switch input:focus-visible + .track { outline: 2px solid #3a76d8; outline-offset: -2px; }
+
+  @media (max-width: 760px) { .springboard { --home: 48px; } }
+</style>
+
+<script>
+  import { onPage } from '../scripts/page';
+  import { launch } from '../scripts/transitions';
+  import { nowPlaying } from '../scripts/player';
+  import { vibrate, tick, setSound, setVibration, soundOn, vibrationOn } from '../scripts/sounds';
+
+  const still = matchMedia('(prefers-reduced-motion: reduce)');
+  const out = 'cubic-bezier(.16, 1, .3, 1)';         // shoots out and settles
+  const inOut = 'cubic-bezier(.4, 0, .2, 1)';
+  const away = 'cubic-bezier(.55, 0, .75, .2)';       // leaves, gathering speed
+  const done = (anims: Animation[]) => Promise.all(anims.map(a => a.finished.catch(() => {})));
+
+  onPage(signal => {
+    const sb = document.getElementById('springboard');
+    if (!sb) return;
+    const root = document.documentElement;
+    const world = document.getElementById('world')!;
+    const homeBtn = document.querySelector<HTMLButtonElement>('.home-btn');
+    const bg = sb.querySelector<HTMLElement>('.bg')!, wall = sb.querySelector<HTMLImageElement>('.wall')!;
+    const cells = [...sb.querySelectorAll<HTMLElement>('.grid li')];
+    const dock = sb.querySelector<HTMLElement>('.dock')!, dots = sb.querySelector<HTMLElement>('.dots')!;
+    const settings = sb.querySelector<HTMLElement>('.settings')!;
+    const covers: Record<string, string> = JSON.parse(sb.dataset.covers || '{}');
+    let open = false, busy = false, held = false;
+    let left: Animation[] = [];                       // what stays applied while the springboard is up
+
+    // Today on the calendar icon.
+    const today = new Date();
+    sb.querySelector('.t-fechas .wd')!.textContent = today.toLocaleDateString('es-MX', { weekday: 'long' });
+    sb.querySelector('.t-fechas .day')!.textContent = String(today.getDate());
+    // Fetch the wallpaper once the page is idle, so it is there when the springboard opens.
+    (window.requestIdleCallback ?? setTimeout)(() => { wall.loading = 'eager'; });
+
+    const pageIcon = () => sb.querySelector<HTMLElement>('.app[aria-current="page"] .icon');
+
+    // The page shrinking into its icon (and back): #world is the whole page, so it is clipped to what is
+    // on screen and moved from its top-left corner to where the icon is, at the icon's size.
+    const clip = () => {
+      const below = Math.max(0, world.offsetHeight - scrollY - innerHeight);
+      return `inset(${scrollY}px 0 ${below}px 0)`;
+    };
+    const into = (icon: HTMLElement | null) => {
+      const r = icon?.getBoundingClientRect() ?? new DOMRect(innerWidth / 2 - 30, innerHeight / 2 - 30, 60, 60);
+      const s = r.width / innerWidth;
+      const tx = r.left + r.width / 2 - s * innerWidth / 2;
+      const ty = r.top + r.height / 2 + scrollY - s * (innerHeight / 2 + scrollY);
+      return `translate(${tx}px, ${ty}px) scale(${s})`;
+    };
+    // Where an icon flies in from and out to: outward from the middle of the screen.
+    const outward = (el: HTMLElement) => {
+      const r = el.getBoundingClientRect();
+      return `translate(${(r.left + r.width / 2 - innerWidth / 2) * .9}px, ${(r.top + r.height / 2 - innerHeight / 2) * .9}px) scale(1.9)`;
+    };
+    const liftWorld = () => Object.assign(world.style, { position: 'relative', zIndex: '151', transformOrigin: '0 0', clipPath: clip(), willChange: 'transform, opacity' });
+    const dropWorld = () => { for (const k of ['position', 'zIndex', 'transformOrigin', 'clipPath', 'willChange', 'visibility'] as const) world.style[k] = ''; };
+
+    const show = async () => {
+      if (open || busy) return;
+      open = busy = true;
+      const t = nowPlaying();
+      wall.src = (t && covers[t.src]) || sb.dataset.wall!;
+      sb.hidden = false;
+      root.classList.add('sb-open');
+      homeBtn?.setAttribute('aria-expanded', 'true');
+      world.inert = true;
+      if (!still.matches) {
+        const icon = pageIcon();
+        liftWorld();
+        const page = world.animate(
+          [{ transform: 'none', opacity: 1 }, { opacity: 1, offset: .55 }, { transform: into(icon), opacity: 0 }],
+          { duration: 480, easing: inOut, fill: 'forwards' });
+        left = [page];
+        const anims = [page, bg.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 380, easing: 'ease-out' })];
+        for (const li of cells) {
+          anims.push(li.contains(icon)
+            ? li.animate([{ opacity: 0 }, { opacity: 0, offset: .72 }, { opacity: 1 }], { duration: 480 })   // it lands in its own icon
+            : li.animate([{ transform: outward(li), opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 560, delay: 30, easing: out, fill: 'backwards' }));
+        }
+        anims.push(dock.animate([{ transform: 'translateY(115%)' }, { transform: 'none' }], { duration: 520, delay: 40, easing: out, fill: 'backwards' }));
+        anims.push(dots.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 260, fill: 'backwards' }));
+        await done(anims);
+      }
+      world.style.visibility = 'hidden';
+      busy = false;
+      if (open) sb.querySelector<HTMLElement>('.grid .app')?.focus({ preventScroll: true });
+    };
+
+    const hide = async () => {
+      if (!open || busy) return;
+      busy = true;
+      stopJiggle();
+      world.style.visibility = '';
+      if (!still.matches) {
+        const icon = pageIcon();
+        world.style.clipPath = clip();
+        const anims = [world.animate(
+          [{ transform: into(icon), opacity: 0 }, { opacity: 1, offset: .22 }, { transform: 'none', opacity: 1 }],
+          { duration: 460, easing: inOut })];
+        left.forEach(a => a.cancel());
+        for (const li of cells) {
+          if (!li.contains(icon)) anims.push(li.animate([{ transform: 'none', opacity: 1 }, { transform: outward(li), opacity: 0 }], { duration: 380, easing: away, fill: 'forwards' }));
+        }
+        anims.push(dock.animate([{ transform: 'none' }, { transform: 'translateY(115%)' }], { duration: 360, easing: away, fill: 'forwards' }));
+        anims.push(bg.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 420, delay: 60, easing: 'ease-in', fill: 'forwards' }));
+        anims.push(dots.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: 'forwards' }));
+        await done(anims.slice(0, 1));
+        await done(anims);
+        anims.forEach(a => a.cancel());
+      }
+      left = [];
+      sb.hidden = true;
+      settings.hidden = true;
+      root.classList.remove('sb-open');
+      dropWorld();
+      world.inert = false;
+      homeBtn?.setAttribute('aria-expanded', 'false');
+      open = busy = false;
+      homeBtn?.focus({ preventScroll: true });
+    };
+
+    // ---- Ajustes, an app inside the springboard ----
+    let settingsAnims: Animation[] = [];
+    const openSettings = async (from: HTMLElement) => {
+      if (busy) return;
+      busy = true;
+      settings.hidden = false;
+      if (!still.matches) {
+        const r = from.getBoundingClientRect(), s = r.width / innerWidth;
+        const at = `translate(${r.left + r.width / 2 - s * innerWidth / 2}px, ${r.top + r.height / 2 - s * innerHeight / 2}px) scale(${s})`;
+        const rest = [sb.querySelector<HTMLElement>('.grid')!, dock, dots];
+        settingsAnims = rest.map(el => el.animate([{ transform: 'none', opacity: 1 }, { transform: 'scale(1.6)', opacity: 0 }], { duration: 420, easing: inOut, fill: 'forwards' }));
+        await done([settings.animate([{ transform: at, opacity: 0 }, { opacity: 1, offset: .3 }, { transform: 'none', opacity: 1 }], { duration: 440, easing: out })]);
+      }
+      busy = false;
+      settings.querySelector<HTMLElement>('input, button')?.focus({ preventScroll: true });
+    };
+    const closeSettings = async () => {
+      if (busy) return;
+      busy = true;
+      const icon = sb.querySelector<HTMLElement>('[data-settings] .icon')!;
+      if (!still.matches) {
+        const r = icon.getBoundingClientRect(), s = r.width / innerWidth;
+        const at = `translate(${r.left + r.width / 2 - s * innerWidth / 2}px, ${r.top + r.height / 2 - s * innerHeight / 2}px) scale(${s})`;
+        settingsAnims.forEach(a => a.reverse());
+        await done([settings.animate([{ transform: 'none', opacity: 1 }, { opacity: 1, offset: .7 }, { transform: at, opacity: 0 }], { duration: 400, easing: inOut }), ...settingsAnims]);
+        settingsAnims.forEach(a => a.cancel());
+      }
+      settings.hidden = true;
+      busy = false;
+      icon.closest<HTMLElement>('a')?.focus({ preventScroll: true });
+    };
+
+    const sound = settings.querySelector<HTMLInputElement>('[data-set="sonidos"]')!;
+    const buzz = settings.querySelector<HTMLInputElement>('[data-set="vibrar"]')!;
+    sound.checked = soundOn();
+    buzz.checked = vibrationOn();
+    if (!('vibrate' in navigator)) settings.querySelector<HTMLElement>('[data-if-vibrate]')!.hidden = true;
+    sound.addEventListener('change', () => { setSound(sound.checked); tick(); }, { signal });
+    buzz.addEventListener('change', () => { setVibration(buzz.checked); vibrate(30); }, { signal });
+    settings.querySelector('[data-set="intro"]')!.addEventListener('click', () => {
+      try { sessionStorage.removeItem('yeyo-intro'); } catch {}
+      location.href = '/';
+    }, { signal });
+
+    // ---- Holding an icon: the jiggle ----
+    let hold = 0, from: [number, number] = [0, 0];
+    const stopJiggle = () => { sb.classList.remove('jiggle'); };
+    sb.addEventListener('pointerdown', e => {
+      if (!(e.target as Element).closest('.app') || e.button !== 0) return;
+      from = [e.clientX, e.clientY];
+      hold = window.setTimeout(() => { sb.classList.add('jiggle'); held = true; vibrate(25); }, 600);
+    }, { signal });
+    sb.addEventListener('pointermove', e => { if (Math.hypot(e.clientX - from[0], e.clientY - from[1]) > 8) clearTimeout(hold); }, { signal });
+    for (const type of ['pointerup', 'pointercancel']) sb.addEventListener(type, () => clearTimeout(hold), { signal });
+    sb.addEventListener('contextmenu', e => { if ((e.target as Element).closest('.app')) e.preventDefault(); }, { signal });
+
+    // ---- Opening an app ----
+    sb.addEventListener('click', e => {
+      const a = (e.target as Element).closest<HTMLAnchorElement>('a.app');
+      if (held) { held = false; e.preventDefault(); return; }            // the press that started the jiggle
+      if (sb.classList.contains('jiggle')) { e.preventDefault(); if (!a) stopJiggle(); return; }
+      if (!a || a.target === '_blank') return;                             // the dock's: Spotify and the rest, in a new tab
+      e.preventDefault();
+      if (busy) return;
+      if (a.hasAttribute('data-settings')) { openSettings(a.querySelector('.icon')!); return; }
+      if (a.getAttribute('aria-current') === 'page') { hide(); return; }
+      vibrate(8);
+      if (a.hasAttribute('data-astro-reload')) { location.href = a.href; return; }
+      launch(a.href, a.querySelector('.icon')!);
+    }, { signal });
+
+    // Nothing scrolls under the springboard (only Ajustes' table, if it is taller than the screen).
+    const keep = (e: Event) => { if (!(e.target as Element).closest('.table')) e.preventDefault(); };
+    sb.addEventListener('wheel', keep, { passive: false, signal });
+    sb.addEventListener('touchmove', keep, { passive: false, signal });
+
+    // The home button, and Esc: out of Ajustes, out of the jiggle, or in and out of the springboard.
+    const home = () => {
+      if (!settings.hidden) closeSettings();
+      else if (sb.classList.contains('jiggle')) stopJiggle();
+      else if (open) hide();
+      else show();
+    };
+    document.addEventListener('yeyo:home', home, { signal });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && open) { e.preventDefault(); home(); } }, { signal });
+    signal.addEventListener('abort', () => { root.classList.remove('sb-open'); homeBtn?.setAttribute('aria-expanded', 'false'); });
+  });
+</script>

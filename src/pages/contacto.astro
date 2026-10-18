@@ -13,7 +13,7 @@ const first = site.contact[0];
   <main class="page contact">
     <h1 class="wordmark"><span class="wm">Contacto</span><small>{site.name}</small></h1>
 
-    <form class="phone-sms" method="post" action={site.form.action || undefined}
+    <form class="phone-sms" data-astro-reload method="post" action={site.form.action || undefined}
       data-mailto={site.form.action ? undefined : first?.email} aria-label="Mensaje para Yeyo">
       <div class="status" aria-hidden="true"><span>●●●●○ Telcel</span><b class="clock">15:53</b><span>87%</span></div>
       <header class="navbar">
@@ -145,15 +145,22 @@ const first = site.contact[0];
 
 <script>
   import '../scripts/mailto-forms';
+  import { onPage } from '../scripts/page';
+  import { tick, swoosh, vibrate } from '../scripts/sounds';
 
-  // The status bar and the thread's stamp show the real time.
-  const now = new Date(), hh = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
-  document.querySelectorAll('.phone-sms .clock').forEach(el => { el.textContent = hh; });
+  onPage(signal => {
+    const form = document.querySelector<HTMLFormElement>('.phone-sms');
+    if (!form) return;
 
-  // Sending, as the phone did: your bubble, the progress bar, "Entregado", then off it goes (the form's
-  // own submit: a form service, or the mail app via mailto-forms.ts).
-  const form = document.querySelector<HTMLFormElement>('.phone-sms');
-  if (form) {
+    // The status bar and the thread's stamp show the real time.
+    const now = new Date(), hh = `${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+    form.querySelectorAll('.clock').forEach(el => { el.textContent = hh; });
+
+    // The keyboard ticks as you type, as the iPhone's did.
+    form.addEventListener('input', e => { if ((e as InputEvent).inputType?.startsWith('insert') || (e as InputEvent).inputType?.startsWith('delete')) tick(); }, { signal });
+
+    // Sending, as the phone did: your bubble, the progress bar, "Entregado", then off it goes (the form's
+    // own submit: a form service, or the mail app via mailto-forms.ts).
     const thread = form.querySelector('.thread')!, text = form.querySelector<HTMLTextAreaElement>('textarea')!;
     let ready = false;
     // In the capture phase, so it runs before mailto-forms.ts and can hold the send back.
@@ -164,6 +171,8 @@ const first = site.contact[0];
       if (!form.reportValidity()) return;
       const bubble = Object.assign(document.createElement('li'), { className: 'out new', textContent: text.value.trim() });
       thread.append(bubble);
+      swoosh();
+      vibrate(15);
       form.classList.add('sending');
       requestAnimationFrame(() => form.style.setProperty('--sent', '100%'));
       setTimeout(() => {
@@ -175,6 +184,6 @@ const first = site.contact[0];
         form.style.setProperty('--sent', '0%');
         text.value = '';
       }, 1300);
-    }, { capture: true });
-  }
+    }, { capture: true, signal });
+  });
 </script>

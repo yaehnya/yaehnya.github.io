@@ -1,6 +1,5 @@
 // The game ball's glass: what is behind it is blurred a touch, saturated, and bent at the rim like
-// thick glass. (The rest of the site's glass is liquid-glass-react, see components/Glass.tsx; the ball
-// is drawn by the game every frame, so it keeps this.) The bending is an SVG displacement filter used as a backdrop-filter, which only
+// thick glass. The bending is an SVG displacement filter used as a backdrop-filter, which only
 // Chromium renders; everywhere else the CSS fallback (frosted glass) stays.
 
 const NS = 'http://www.w3.org/2000/svg';
